@@ -24,7 +24,7 @@ const bindingSchema = z.strictObject({
   scheme: schemeSchema,
 });
 export type CredentialBinding = z.infer<typeof bindingSchema>;
-const secretSchema = z.string().min(1).max(16_384).refine((value) => !/[\r\n\0]/.test(value));
+const secretSchema = z.string().min(1).max(16_384).refine((value) => !/[\s\0]/.test(value));
 const credentialSchema = z.strictObject({
   version: z.literal(1),
   binding: bindingSchema,

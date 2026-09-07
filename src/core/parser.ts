@@ -55,7 +55,7 @@ export function parseCommand(args: string[]): ParsedCommand {
 
 /** Detect output intent even when parsing fails, without treating values/positionals as flags. */
 export function wantsJson(args: string[]): boolean {
-  const stringFlags = new Set<string>(["--context", "--timeout", "--product"]);
+  const stringFlags = new Set(commandRegistry().flatMap(command => Object.entries(command.flags).filter(([, flag]) => flag.type !== "boolean").map(([name]) => `--${name}`)));
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--") break;

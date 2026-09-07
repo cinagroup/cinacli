@@ -54,9 +54,11 @@ test('schema lists exactly implemented commands and defines input/output/effects
     assert.equal(command.outputSchema.type, 'object');
     assert.equal(command.inputSchema.additionalProperties, false);
     assert.equal(command.streaming, false);
-    assert.deepEqual(command.authentication, []);
+    assert.ok(Array.isArray(command.authentication));
   }
-  assert.ok(!result.stdout.includes('token.models.list'));
+  const models = result.json.data.commands.find(item => item.command === 'token.models.list');
+  assert.equal(models.authentication[0].scheme, 'token-gateway');
+  assert.equal(models.effect, 'business-read');
 });
 
 test('invalid arguments produce one sanitized JSON failure with exit 2', async t => {
@@ -82,8 +84,8 @@ test('invalid arguments produce one sanitized JSON failure with exit 2', async t
 
 test('unknown product commands are errors, not fabricated empty success', async t => {
   const directory = await fixture(t);
-  assert.equal((await run(directory, ['token', 'models', 'list', '--json'])).exitCode, 2);
-  const result = await run(directory, ['schema', 'token.models.list', '--json']);
+  assert.equal((await run(directory, ['shop', 'orders', 'list', '--json'])).exitCode, 2);
+  const result = await run(directory, ['schema', 'shop.orders.list', '--json']);
   assert.equal(result.exitCode, 8);
   assert.equal(result.json.error.code, 'CAPABILITY_UNAVAILABLE');
 });

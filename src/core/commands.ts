@@ -4,64 +4,13 @@ import { configKeys, contextNameSchema, productSchema, products, publicContext, 
 import { createContext, readConfig, selectContext, setConfigValue, updateConfig } from "./context/store.js";
 import { probeSecretStore } from "./credentials/store.js";
 import { probeEndpoint } from "./transport.js";
-import type { Environment } from "./context/store.js";
-import type { SecretStore } from "./credentials/store.js";
-
-export interface Runtime {
-  env: Environment;
-  directory: () => string;
-  signal: AbortSignal;
-  store: SecretStore;
-  version: string;
-  context: { name: string; product: string | null } | null;
-}
-
-export const globalShape = {
-  context: contextNameSchema.optional().describe("命名环境；优先于 CINA_CONTEXT"),
-  json: z.boolean().default(false).describe("stdout 输出单个 JSON 文档"),
-  noInput: z.boolean().default(false).describe("禁止交互和隐式登录"),
-  timeout: z.number().positive().max(300).default(30).describe("总超时，单位秒，最多 300 秒"),
-};
-export const globalFlags = {
-  context: { type: "string", field: "context" },
-  json: { type: "boolean", field: "json" },
-  "no-input": { type: "boolean", field: "noInput" },
-  timeout: { type: "number", field: "timeout" },
-} as const;
-export interface Flag { type: "string" | "boolean" | "number"; field: string }
-export interface Command {
-  id: string;
-  path: string[];
-  summary: string;
-  effect: "local-read" | "local-write";
-  contextRequirements: string[];
-  positionals: string[];
-  flags: Record<string, Flag>;
-  input: z.ZodType;
-  output: z.ZodType;
-  run: (input: unknown, runtime: Runtime) => Promise<unknown>;
-}
-
-function define<Shape extends z.ZodRawShape>(spec: {
-  id: string; summary: string; effect?: Command["effect"]; contextRequirements?: string[];
-  shape: Shape; output: z.ZodType; positionals?: string[]; flags?: Record<string, Flag>;
-  run: (input: z.infer<z.ZodObject<Shape & typeof globalShape>>, runtime: Runtime) => Promise<unknown>;
-}): Command {
-  const input = z.strictObject({ ...globalShape, ...spec.shape });
-  return {
-    id: spec.id, path: spec.id.split("."), summary: spec.summary,
-    effect: spec.effect ?? "local-read", contextRequirements: spec.contextRequirements ?? [],
-    positionals: spec.positionals ?? [], flags: { ...globalFlags, ...spec.flags }, input, output: spec.output,
-    run: async (raw, runtime) => {
-      const parsed = input.safeParse(raw);
-      if (!parsed.success) throw new CliError("INVALID_ARGUMENT");
-      const result = await spec.run(parsed.data, runtime);
-      const output = spec.output.safeParse(result);
-      if (!output.success) throw new CliError("INTERNAL_ERROR");
-      return output.data;
-    },
-  };
-}
+import { define } from "./command.js";
+import type { Command, Runtime } from "./command.js";
+import { tokenCommands } from "../products/token/commands.js";
+import { chainCommands } from "../products/chain/commands.js";
+import { sessionCommands } from "./sessions.js";
+export { globalShape, globalFlags } from "./command.js";
+export type { Command, Flag, Runtime } from "./command.js";
 
 const contextResult = z.strictObject({ context: publicContextSchema });
 const contextOptions = { contextRequirements: ["selected context"] };
@@ -146,7 +95,7 @@ const commands: Command[] = [
         product: productSchema,
         configuration: z.enum(["configured", "not-configured"]),
         connectivity: z.enum(["not-checked", "reachable", "failed"]),
-        adapter: z.literal("not-implemented"),
+        adapter: z.enum(["implemented", "not-implemented"]),
         authorization: z.literal("unknown"),
       })),
     }),
@@ -166,12 +115,15 @@ const commands: Command[] = [
           try { await probeEndpoint(endpoint, runtime.signal); connectivity = "reachable"; }
           catch { if (runtime.signal.aborted) throw runtime.signal.reason; connectivity = "failed"; }
         }
-        checks.push({ product, configuration: endpoint ? "configured" : "not-configured", connectivity, adapter: "not-implemented", authorization: "unknown" });
+        checks.push({ product, configuration: endpoint ? "configured" : "not-configured", connectivity, adapter: commands.some((command) => command.id.startsWith(`${product}.`)) ? "implemented" : "not-implemented", authorization: "unknown" });
       }
-      // M0 has no product adapters; a reachable socket does not imply a ready product.
+      // Connectivity alone never proves authorization or application readiness.
       return { status: "attention", credentialStore: available ? "available" : "unavailable", checks };
     },
   }),
+  ...tokenCommands,
+  ...chainCommands,
+  ...sessionCommands,
 ];
 
 export function commandRegistry(): readonly Command[] { return commands; }
@@ -183,8 +135,8 @@ export function commandSchema(command: Command): Record<string, unknown> {
     outputSchema: z.toJSONSchema(command.output),
     arguments: command.positionals,
     flags: command.flags,
-    authentication: [], contextRequirements: command.contextRequirements, effect: command.effect,
-    pagination: "none", streaming: false,
-    retryPolicy: "none", idempotency: "none", preview: "none",
+    authentication: command.authentication, contextRequirements: command.contextRequirements, effect: command.effect,
+    pagination: command.pagination, streaming: false,
+    retryPolicy: command.retryPolicy, idempotency: "none", preview: "none",
   };
 }

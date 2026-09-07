@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
 
 const execute = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -20,11 +21,29 @@ const env = { ...process.env };
 for (const key of Object.keys(env)) if (key.startsWith('CINA_')) delete env[key];
 env.CINA_CONFIG_DIR = join(installation, 'config');
 
-async function pnpm(args, overrides = {}) {
-  return execute(executable, [...prefix, ...args], { cwd: root, env: { ...env, ...overrides }, maxBuffer: 4 * 1024 * 1024 });
+async function pnpm(args, overrides = {}, stdin = '') {
+  const execution = execute(executable, [...prefix, ...args], { cwd: root, env: { ...env, ...overrides }, maxBuffer: 4 * 1024 * 1024 });
+  execution.child.stdin.end(stdin);
+  return execution;
 }
 
+const syntheticKey = 'package-smoke-synthetic-key';
+const rpcMethods = [];
+const server = createServer(async (req, res) => {
+  if (req.url === '/v1/me') {
+    if (req.headers.authorization !== `Bearer ${syntheticKey}`) return res.writeHead(401).end();
+    return res.end(JSON.stringify({ workspace_id: 'smoke', budget_max: null, budget_spent: 1.5, budget_period: 'monthly', budget_reset_at: null, billing_currency: 'USD' }));
+  }
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const body = JSON.parse(Buffer.concat(chunks).toString());
+  rpcMethods.push(body.method);
+  const result = { eth_chainId: '0x14a34', eth_blockNumber: '0x123', eth_getBalance: '0x10000000000000001' }[body.method];
+  res.end(JSON.stringify({ jsonrpc: '2.0', id: body.id, result }));
+});
 try {
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const endpoint = `http://127.0.0.1:${server.address().port}`;
   const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   const archive = join(artifacts, `cinagroup-cli-${manifest.version}.tgz`);
   const packed = JSON.parse((await pnpm(['pack', '--config.ignore-scripts=true', '--out', archive, '--json'])).stdout);
@@ -32,8 +51,10 @@ try {
   assert.ok(packed.files.every(file => /^(dist\/|docs\/|README\.md$|package\.json$)/.test(file.path)));
   await writeFile(join(installation, 'package.json'), JSON.stringify({ name: 'cinacli-package-smoke', private: true, type: 'module' }));
   await pnpm(['--dir', installation, 'add', archive, '--offline', '--ignore-scripts', '--no-lockfile']);
-  async function cina(args, overrides) {
-    return JSON.parse((await pnpm(['--dir', installation, 'exec', 'cina', ...args, '--json'], overrides)).stdout);
+  async function cina(args, overrides, stdin) {
+    const stdout = (await pnpm(['--dir', installation, 'exec', 'cina', ...args, '--json'], overrides, stdin)).stdout;
+    assert.ok(!stdout.includes(syntheticKey));
+    return JSON.parse(stdout);
   }
   assert.equal((await cina(['--version'])).data.version, packed.version);
   assert.equal((await cina(['--help'], { CINA_CONFIG_DIR: 'deliberately-invalid' })).ok, true);
@@ -42,8 +63,20 @@ try {
   assert.equal((await cina(['context', 'create', 'staging'])).ok, true);
   assert.equal((await cina(['context', 'use', 'staging'])).ok, true);
   assert.equal((await cina(['config', 'set', 'chain.chainId', '84532'])).data.context.products.chain.chainId, 84532);
+  await cina(['config', 'set', 'chain.endpoint', endpoint]);
+  const balance = await cina(['chain', 'balance', '--address', '0x0000000000000000000000000000000000000000']);
+  assert.equal(balance.data.balance.value, '18446744073709551617');
+  assert.deepEqual(rpcMethods, ['eth_chainId', 'eth_blockNumber', 'eth_getBalance']);
+  await cina(['config', 'set', 'token.endpoint', endpoint]);
+  assert.equal((await cina(['token', 'account', 'show'], { CINA_TOKEN_GATEWAY_KEY: syntheticKey })).data.budget.spent, '1.5');
+  const login = await cina(['login', '--product', 'token', '--credential', 'gateway', '--token-stdin', '--no-store'], {}, `${syntheticKey}\r\n`);
+  assert.equal(login.data.validated, true);
+  assert.equal(login.data.saved, false);
+  assert.equal(login.data.source, 'stdin');
   console.log(JSON.stringify({ ok: true, archive, platform: process.platform, commands: schema.data.commands.length, files: packed.files.length }));
 } finally {
+  server.closeAllConnections();
+  await new Promise(resolve => server.close(resolve));
   // Only remove the directory created by this script, below the fixed workspace test root.
   const target = resolve(installation);
   assert.equal(dirname(target), resolve(sandboxRoot));

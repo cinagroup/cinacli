@@ -12,7 +12,7 @@ import type { Runtime } from "./core/commands.js";
 
 export const version = (JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string }).version;
 export interface CliIO { out: (text: string) => void; err: (text: string) => void; isTTY: boolean }
-export interface RunOptions { env?: Environment; io: CliIO; signal?: AbortSignal; store?: SecretStore }
+export interface RunOptions { env?: Environment; io: CliIO; signal?: AbortSignal; store?: SecretStore; readSecret?: (signal: AbortSignal) => Promise<string> }
 
 /** Dependency injection keeps offline commands testable without filesystem/network/credential access. */
 export async function runCli(args: string[], options: RunOptions): Promise<number> {
@@ -39,7 +39,7 @@ export async function runCli(args: string[], options: RunOptions): Promise<numbe
         return `  cina ${item.path.join(" ")}${argumentsText}\n    ${item.summary}`;
       }), "", "公共参数：--context <name>  --json  --no-input  --timeout <seconds>  --help",
       ...(parsed.command ? Object.entries(parsed.command.flags).filter(([name]) => !["context", "json", "no-input", "timeout"].includes(name)).map(([name, flag]) => `  --${name}${flag.type === "boolean" ? "" : ` <${flag.field}>`}`) : []),
-      "使用 cina schema <command-id> --json 查看字段和返回结构。", "M0：产品业务命令尚未接入。", ""].join("\n");
+      "使用 cina schema <command-id> --json 查看字段、认证要求和返回结构。", ""].join("\n");
       emit({ version, commands: selected.map(commandSchema) }, commandId, null, json, options.io, help);
       return 0;
     }
@@ -48,12 +48,12 @@ export async function runCli(args: string[], options: RunOptions): Promise<numbe
     const env = options.env ?? process.env;
     runtime = {
       env, directory: () => configDirectory(env), signal: timer.signal,
-      store: options.store ?? systemSecretStore(), version, context: null,
+      store: options.store ?? systemSecretStore(), version, context: null, meta: {}, readSecret: options.readSecret,
     };
     runtime.signal.throwIfAborted();
     const input = { ...parsed.input, noInput: globals.data.noInput || !options.io.isTTY || json };
     const result = await parsed.command.run(input, runtime);
-    emit(result, commandId, runtime.context, json, options.io);
+    emit(result, commandId, runtime.context, json, options.io, undefined, runtime.meta);
     return 0;
   } catch (caught) {
     const error = safeError(caught);
@@ -63,7 +63,7 @@ export async function runCli(args: string[], options: RunOptions): Promise<numbe
   } finally { timer?.dispose(); }
 }
 
-function emit(data: unknown, command: string | null, context: Runtime["context"], json: boolean, io: CliIO, human?: string): void {
-  if (json) io.out(`${JSON.stringify({ contractVersion: "1", ok: true, command, context, data, meta: {} })}\n`);
+function emit(data: unknown, command: string | null, context: Runtime["context"], json: boolean, io: CliIO, human?: string, meta: Record<string, unknown> = {}): void {
+  if (json) io.out(`${JSON.stringify({ contractVersion: "1", ok: true, command, context, data, meta })}\n`);
   else io.out(human ?? `${JSON.stringify(data, null, 2)}\n`);
 }

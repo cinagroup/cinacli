@@ -12,9 +12,9 @@ Cina 产品统一命令行入口，面向开发者、运营人员、脚本和 AI
 
 ## 当前状态
 
-**M0 公共框架已实现，版本 `0.1.0-alpha.1`；尚未发布 npm 包。**
+**公共框架及 Token、Chain 首批命令已实现，版本 `0.1.0-alpha.2`；尚未发布 npm 包。**
 
-当前可运行离线帮助、命令 schema、context/config 和 doctor。产品业务命令与登录尚未接入，不出现在可执行 schema 中。五产品实际部署、CLI 客户端注册与联合运行尚未验证。
+当前支持离线 help/schema、context/config、doctor、Token 凭据验证/保存/退出，以及下方列出的 Token、Chain 只读命令。Chain 已通过公开测试网 RPC 验证；Token 已通过本地接口契约测试，真实认证联调待测试 endpoint 和凭据。Auth、Shop、Seek 处于后续接入阶段。
 
 目标是统一命令、环境配置、凭据管理与输出契约。首版按各产品现有认证方式接入；跨产品单点登录按服务端接入进度推进。
 
@@ -24,6 +24,8 @@ Cina 产品统一命令行入口，面向开发者、运营人员、脚本和 AI
 - [首版命令及输出契约](docs/command-contract.md)
 - [产品接口映射与待补能力](docs/product-integration.md)
 - [实施顺序与验收条件](docs/roadmap.md)
+- [Token 与 Chain 使用说明](docs/token-chain.md)
+- [验证记录](docs/validation.md)
 
 ## 本地运行
 
@@ -42,14 +44,25 @@ node dist/bin.js schema --json
 node dist/bin.js context create staging
 node dist/bin.js context use staging
 node dist/bin.js config set chain.chainId 84532
-node dist/bin.js config set chain.endpoint https://sepolia.base.org
+node dist/bin.js config set chain.endpoint https://rpc-proxy.cinachain.com
 node dist/bin.js context show --json
-node dist/bin.js doctor --product chain --json
+node dist/bin.js chain status --json
+node dist/bin.js chain balance --address 0x0000000000000000000000000000000000000000 --json
 ```
 
-doctor 默认只检查本地状态；`--network` 额外进行 TCP/TLS 连通性检查，不发送 HTTP 业务请求或凭据。M0 会明确报告产品适配器尚未实现，连通不等于已授权或业务接口可用。
+doctor 默认只检查本地状态；`--network` 额外进行 TCP/TLS 连通性检查，不发送 HTTP 业务请求或凭据。它报告各产品适配器的实现状态，连通不等于已授权或业务接口可用。
 
-配置目录可以用绝对路径 `CINA_CONFIG_DIR` 覆盖。`--context` 优先于 `CINA_CONTEXT`，再优先于已保存环境。配置字段见 `cina schema config.set --json`；配置文件不接受秘密字段。环境变量凭据支持在核心适配接口中实现，尚无可使用它们的产品业务命令。
+配置目录可以用绝对路径 `CINA_CONFIG_DIR` 覆盖。`--context` 优先于 `CINA_CONTEXT`，再优先于已保存环境。配置字段见 `cina schema config.set --json`；配置文件不接受秘密字段。
+
+Token 先设置 `token.endpoint`，然后通过环境变量 `CINA_TOKEN_GATEWAY_KEY` / `CINA_TOKEN_MANAGEMENT_KEY` 分别提供密钥，即可调用：
+
+```sh
+node dist/bin.js token models list --json
+node dist/bin.js token account show --json
+node dist/bin.js token workspaces list --offset 0 --limit 20 --json
+```
+
+`login --product token --credential gateway` 验证对应环境变量后将密钥保存到系统凭据库；Management 使用 `--credential management`。显式 `--token-stdin` 接受管道输入，密钥不作为命令行参数。使用 `--no-store` 只验证、不持久保存。退出命令及凭据覆盖规则见[使用说明](docs/token-chain.md)。
 
 ## 验证与本地安装包
 
@@ -61,7 +74,7 @@ pnpm test:keyring
 
 `pnpm check` 运行类型检查、构建和契约测试。`test:package` 在临时目录离线安装实际打包产物并执行 `cina`，产物保留在 `artifacts/`。`test:keyring` 使用一次性合成凭据验证系统凭据库并删除测试记录；Linux 需要可用且已解锁的 Secret Service。
 
-`.github/workflows/ci.yml` 在 Windows、macOS、Linux 运行相同验证。系统凭据库不可用时，核心层明确报错，支持显式环境变量覆盖，不会回退保存明文凭据。当前不提供 OAuth 刷新或产品登录，刷新协调将在接入相应认证流程时实现。
+`.github/workflows/ci.yml` 在 Windows、macOS、Linux 运行相同验证。系统凭据库不可用时明确报错，支持显式环境变量覆盖，不会回退保存明文凭据。当前支持 Token API key 导入；OAuth 登录和刷新将在对应认证流程中实现。
 
 设计文档中的命令范围大于当前实现；以离线 `cina schema` 的实际输出为准。
 
@@ -74,14 +87,12 @@ cina context use staging
 cina login
 cina whoami --json
 
-cina token models list --json
 cina shop orders list --page 1 --limit 20 --json
 cina seek workspaces list --json
-cina chain status --json
 
 cina schema shop.orders.list --json
 ```
 
 首版以业务只读操作为主。登录、刷新令牌、退出登录和修改本地配置会改变认证或本地状态，其行为单独声明。用户管理、订单写入、模型生成、Agent 执行和链上签名列入后续阶段。
 
-下一步接入 Token 与 Chain，见[路线图 M1](docs/roadmap.md#m1token-与-chain-最小闭环)。
+下一步完成 Token 真实认证联调，并推进 Auth、Shop、Seek 接入，见[路线图](docs/roadmap.md)。

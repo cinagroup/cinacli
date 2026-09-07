@@ -14,6 +14,7 @@ export const errorDefinitions = {
   NETWORK_ERROR: [7, "网络请求失败。", true],
   RATE_LIMITED: [7, "请求受到限流。", true],
   UPSTREAM_UNAVAILABLE: [7, "上游服务暂时不可用。", true],
+  UPSTREAM_RPC_ERROR: [7, "上游 RPC 返回执行错误。", false],
   CAPABILITY_UNAVAILABLE: [8, "当前能力不可用。", false],
   UPSTREAM_CONTRACT_MISMATCH: [8, "上游响应不符合预期契约。", false],
   TIMEOUT: [9, "操作超时。", true],

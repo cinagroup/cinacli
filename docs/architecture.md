@@ -1,6 +1,6 @@
 # 总体架构与认证方案
 
-状态：架构方案；更新日期：2026-09-07。M0 公共框架已实现，产品认证和业务适配仍为后续设计。实际能力以 README 和 cina schema 为准。
+状态：架构方案；更新日期：2026-09-07。M0 与 M1 Token/Chain 已实现；Auth、Shop、Seek 认证与业务适配仍为后续设计。实际能力以 README 和 cina schema 为准。
 
 ## 1. 设计决定
 
@@ -154,10 +154,10 @@ CLI 版本与 `schemaVersion`、输出 `contractVersion` 分开。0.x 阶段也�
 
 首版 `schema` 来源于本地随包注册表，可离线使用；当前部署可用性由 `doctor` 检查并单独报告。无可验证的服务端版本或能力信号时报告 unknown。后续如引入远程能力发现，不允许远程描述任意执行本机命令。
 
-## 7. M0 实现边界
+## 7. 当前实现边界
 
 M0 已实现配置的严格版本校验、写入锁和原子替换；产品配置发生变化时提升凭据修订号，即使把 endpoint 改回旧值也不复用旧绑定。配置锁遇到并发写入直接报冲突；若进程异常退出遗留 config.lock，需确认没有写入进程后手动移除，CLI 不自动抢占锁。
 
-凭据适配器提供读取、保存、删除、过期检查和产品环境隔离。尚未开放登录/退出命令，OAuth 刷新协调、凭据轮换及旧修订记录清理随认证模块接入。显式凭据环境变量仅覆盖本次所选绑定且不持久化。当前核心支持 Gateway、Management、Shop access token、Seek session 和 Chain RPC key 的分类型变量，具体列表见 src/core/credentials/store.ts。
+凭据适配器提供读取、保存、删除、过期检查和产品环境隔离。M1 开放 Token key 的验证导入和本机退出；OAuth 刷新协调、凭据轮换及旧修订记录清理随认证模块接入。显式凭据环境变量仅覆盖本次所选绑定，只有明确 login 才持久保存。核心预留 Gateway、Management、Shop access token、Seek session 和 Chain RPC key 的分类型变量，具体列表见 src/core/credentials/store.ts；当前业务命令实际使用 Token 的两类变量，Chain 使用公开 RPC。
 
-doctor 的网络检查仅打开 TCP/TLS 连接，不验证产品协议、用户权限或部署版本；所有产品 adapter 在 M0 均为 not-implemented。通用 JSON transport 已具备截止时间、取消、响应大小限制、有限读取重试和禁止跟随重定向等行为，由后续产品适配器调用。
+doctor 的网络检查仅打开 TCP/TLS 连接，不验证产品协议、用户权限或部署版本；Token/Chain adapter 已实现，其他仍为 not-implemented。通用 JSON transport 具备截止时间、取消、响应大小限制、有限读取重试和禁止跟随重定向等行为。产品命令的轻量定义可离线加载，实际 handler 在执行时动态导入。

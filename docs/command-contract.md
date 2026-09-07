@@ -1,6 +1,6 @@
 # 首版命令及输出契约
 
-状态：命令契约；更新日期：2026-09-07。**M0 命令已实现；M1/M2 产品业务及登录命令尚未实现。** 各阶段对应[路线图](roadmap.md)中的里程碑。
+状态：命令契约；更新日期：2026-09-07。**M0 与 M1 Token/Chain 命令已实现；M2 Auth/Shop/Seek 尚未实现。** 登录/退出当前只支持显式 `--product token`。各阶段对应[路线图](roadmap.md)中的里程碑。
 
 ## 1. 命令范围
 
@@ -15,12 +15,14 @@
 | `cina config show` / `set <key> <value>` | 查看或修改非敏感配置 | M0 |
 | `cina doctor [--product <product>]` | 检查配置、凭据库及受限的网络连通性 | M0 |
 | `cina login [--product <product>]` | 默认 CinaAuth；指定产品走对应流程 | M1/M2 |
-| `cina logout [--product <product> \| --all-products]` | 默认只退出 CinaAuth；显式选择其他范围 | M1/M2 |
+| `cina logout [--product <product>]` | 显式指定产品；Token 可选择 credential 或清除当前两类 key | M1/M2 |
 | `cina whoami` | 调用 CinaAuth userinfo 验证当前核心身份 | M2 |
 
 `context use` 对不存在的 context 报错；`config set` 校验允许的字段和 URL，不接受任意代码或秘密字段。`doctor` 缺少某产品配置时逐项报告，不把其他已正常服务标记为失败；聚合状态区分 ready、not-configured、unsupported、unknown、failed。
 
-M0 的 doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；当前 adapter 全部为 not-implemented，聚合 status 为 attention。配置解析、超时或中断等执行失败仍返回相应非零退出码。
+doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；Token/Chain adapter 为 implemented，其他为 not-implemented，authorization 仍为 unknown，聚合 status 为 attention。配置解析、超时或中断等执行失败仍返回相应非零退出码。
+
+Token 登录必须指定 `--credential gateway|management`，通过环境变量或显式 `--token-stdin` 输入，验证后存入系统凭据库；`--no-store` 仅验证。Token 退出仅清理本机绑定，不远程撤销 API key。默认 `login` / `logout` 对应的 Auth 流程尚未支持，明确返回 CAPABILITY_UNAVAILABLE；未提供 `--all-products`。
 
 ### 产品只读命令
 
@@ -119,7 +121,7 @@ Shop 订单 status 当前使用上游整数过滤；首版 schema 如暴露 `--s
 | 上游能力 | CLI 表达 |
 | --- | --- |
 | Shop page/limit + count | page 模式；明确 page、limit、total、hasMore |
-| Token Management offset/limit | offset 模式；仅在确认上游字段后暴露对应参数 |
+| Token Management offset/limit | offset 模式；默认 0/50，响应 total、hasMore、nextOffset 位于 meta.pagination |
 | Seek listGadgets 一次性列表 | mode=none；不编造服务端分页或未提供的总量 |
 | Token models 一次性列表 | mode=none；保留上游模型过滤含义 |
 
@@ -140,7 +142,7 @@ v0.1 不发布会消耗模型额度或执行 Agent 的流命令。后续使用 `
 | 4 | 服务端拒绝权限 | PERMISSION_DENIED |
 | 5 | 资源不存在 | RESOURCE_NOT_FOUND |
 | 6 | 冲突或前提未满足 | CONFLICT、PRECONDITION_FAILED |
-| 7 | 限流、网络或上游暂不可用 | RATE_LIMITED、NETWORK_ERROR、UPSTREAM_UNAVAILABLE |
+| 7 | 限流、网络或上游错误 | RATE_LIMITED、NETWORK_ERROR、UPSTREAM_UNAVAILABLE、UPSTREAM_RPC_ERROR |
 | 8 | 当前能力或契约不支持 | CAPABILITY_UNAVAILABLE、UPSTREAM_CONTRACT_MISMATCH |
 | 9 | 命令超时 | TIMEOUT |
 | 130 | 用户中断 | CANCELLED |
