@@ -1,6 +1,6 @@
 # 首版命令及输出契约
 
-状态：设计草案；日期：2026-09-07。**本文件中的命令全部尚未实现。** M0/M1/M2 对应[路线图](roadmap.md)中的里程碑。
+状态：命令契约；更新日期：2026-09-07。**M0 命令已实现；M1/M2 产品业务及登录命令尚未实现。** 各阶段对应[路线图](roadmap.md)中的里程碑。
 
 ## 1. 命令范围
 
@@ -19,6 +19,8 @@
 | `cina whoami` | 调用 CinaAuth userinfo 验证当前核心身份 | M2 |
 
 `context use` 对不存在的 context 报错；`config set` 校验允许的字段和 URL，不接受任意代码或秘密字段。`doctor` 缺少某产品配置时逐项报告，不把其他已正常服务标记为失败；聚合状态区分 ready、not-configured、unsupported、unknown、failed。
+
+M0 的 doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；当前 adapter 全部为 not-implemented，聚合 status 为 attention。配置解析、超时或中断等执行失败仍返回相应非零退出码。
 
 ### 产品只读命令
 
