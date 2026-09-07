@@ -28,3 +28,14 @@ export async function withCredentialLock<T>(runtime: Runtime, binding: Credentia
   try { runtime.signal.throwIfAborted(); return await action(); }
   finally { await handle.close(); await unlink(path).catch(() => {}); }
 }
+
+/** Acquire every selected binding before mutating any of them (e.g. Token logout). */
+export async function withCredentialLocks<T>(runtime: Runtime, bindings: readonly CredentialBinding[], action: () => Promise<T>): Promise<T> {
+  const unique = new Map(bindings.map(binding => [credentialKey(binding), binding]));
+  const ordered = [...unique.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([, binding]) => binding);
+  const acquire = (index: number): Promise<T> => {
+    const binding = ordered[index];
+    return binding ? withCredentialLock(runtime, binding, () => acquire(index + 1)) : action();
+  };
+  return acquire(0);
+}

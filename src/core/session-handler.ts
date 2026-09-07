@@ -1,7 +1,7 @@
 import { CliError } from "./errors.js";
 import { loadProduct } from "./product.js";
 import { credentialBinding, credentialKey, saveCredential } from "./credentials/store.js";
-import { readConfig, selectContext } from "./context/store.js";
+import { assertCurrentBinding, withCredentialLock, withCredentialLocks } from "./credentials/lock.js";
 import { readAccount, readWorkspaces } from "../products/token/handler.js";
 import type { Runtime } from "./command.js";
 
@@ -14,7 +14,7 @@ export async function login(input: Input & { tokenStdin: boolean; secretStdin: b
   if (input.product === "seek") return (await import("../products/seek/session.js")).loginSeek(input, runtime);
   if (input.vendor) throw new CliError("INVALID_ARGUMENT", "--vendor 仅适用于 Seek 浏览器登录。");
   if (input.product === "shop") return (await import("../products/shop/session.js")).loginShop(input, runtime);
-  if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品的登录尚未接入；当前支持 Token 和 Shop。");
+  if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品未提供登录；当前支持 Auth、Token、Shop 和 Seek。");
   if (input.secretStdin) throw new CliError("INVALID_ARGUMENT", "Token 密钥管道输入使用 --token-stdin。");
   const selection = input.credential;
   if (!selection) throw new CliError("INVALID_ARGUMENT", "Token 登录需要明确指定 --credential gateway 或 management。");
@@ -24,15 +24,18 @@ export async function login(input: Input & { tokenStdin: boolean; secretStdin: b
   if (input.tokenStdin && !runtime.readSecret) throw new CliError("CREDENTIAL_REQUIRED");
   const secret = input.tokenStdin ? await runtime.readSecret!(runtime.signal) : fromEnvironment;
   if (!secret || secret.length > 16_384 || /[\s\0]/.test(secret)) throw new CliError("CREDENTIAL_REQUIRED", "请通过对应凭据环境变量或 --token-stdin 提供有效密钥。");
-  if (selection === "gateway") await readAccount(endpoint, secret, runtime, context);
-  else await readWorkspaces(endpoint, secret, runtime, 0, 1);
   const binding = credentialBinding(context, `token-${selection}`);
-  if (!input.noStore) {
-    const current = selectContext(await readConfig(runtime.directory()), context.name, {});
-    if (credentialKey(credentialBinding(current, binding.scheme)) !== credentialKey(binding)) throw new CliError("CONFLICT", "认证期间产品配置发生变化，请重试。");
-    await saveCredential(runtime.store, { version: 1, binding, secret, principal: null, scopes: [], expiresAt: null }, runtime.signal);
-  }
-  return { product: "token", credential: selection, validated: true, saved: !input.noStore, source: input.tokenStdin ? "stdin" : "environment", expiresAt: null, principal: null };
+  return withCredentialLock(runtime, binding, async () => {
+    await assertCurrentBinding(runtime, binding);
+    if (!input.noStore) await runtime.store.get(credentialKey(binding), runtime.signal);
+    if (selection === "gateway") await readAccount(endpoint, secret, runtime, context);
+    else await readWorkspaces(endpoint, secret, runtime, 0, 1);
+    if (!input.noStore) {
+      await assertCurrentBinding(runtime, binding);
+      await saveCredential(runtime.store, { version: 1, binding, secret, principal: null, scopes: [], expiresAt: null }, runtime.signal);
+    }
+    return { product: "token", credential: selection, validated: true, saved: !input.noStore, source: input.tokenStdin ? "stdin" : "environment", expiresAt: null, principal: null };
+  });
 }
 
 export async function logout(input: Input & { revoke: boolean }, runtime: Runtime) {
@@ -40,14 +43,18 @@ export async function logout(input: Input & { revoke: boolean }, runtime: Runtim
   if (input.revoke) throw new CliError("INVALID_ARGUMENT", "--revoke 仅适用于 Auth。");
   if (input.product === "seek") return (await import("../products/seek/session.js")).logoutSeek(input, runtime);
   if (input.product === "shop") return (await import("../products/shop/session.js")).logoutShop(input, runtime);
-  if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品的退出登录尚未接入；当前可使用 --product token。");
+  if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品未提供退出登录；当前支持 Auth、Token、Shop 和 Seek。");
   const { context } = await loadProduct(input, runtime, "token");
   const selected: Selection[] = input.credential ? [input.credential] : ["gateway", "management"];
-  const removed = [];
-  for (const credential of selected) {
-    const binding = credentialBinding(context, `token-${credential}`);
-    await runtime.store.remove(credentialKey(binding), runtime.signal);
-    removed.push({ credential, localCleared: true });
-  }
-  return { product: "token", removed, remoteRevocation: "not-requested", environmentCredentialsPresent: selected.some(credential => runtime.env[variables[credential]] !== undefined) };
+  const bindings = selected.map(credential => credentialBinding(context, `token-${credential}`));
+  return withCredentialLocks(runtime, bindings, async () => {
+    for (const binding of bindings) await assertCurrentBinding(runtime, binding);
+    const removed = [];
+    for (const credential of selected) {
+      const binding = credentialBinding(context, `token-${credential}`);
+      await runtime.store.remove(credentialKey(binding), runtime.signal);
+      removed.push({ credential, localCleared: true });
+    }
+    return { product: "token", removed, remoteRevocation: "not-requested", environmentCredentialsPresent: selected.some(credential => runtime.env[variables[credential]] !== undefined) };
+  });
 }

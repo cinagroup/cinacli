@@ -10,6 +10,7 @@
 - 默认 `login` / `logout` 现对应 Auth；`auth status` 的 `login` 从 `not-implemented` 改为 `browser-pkce`。
 - 补充安装说明、支持矩阵、schema 快照与 CI 安装包；共 27 条命令。
 - 采用 Apache-2.0，随安装包分发官方 LICENSE 全文。
+- 修复 Token 登录/退出并发时凭据重新出现的问题；两类凭据一起退出前先取得全部绑定锁。修复长凭据刷新期间读取旧分块被误报为损坏的问题。
 
 ## 0.1.0-alpha.4 — 2026-09-07
 

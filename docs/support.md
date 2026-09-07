@@ -16,7 +16,7 @@
 
 | 场景 | 支持行为 |
 | --- | --- |
-| Windows / macOS / Ubuntu，Node 24 | CI 构建、58 项测试、安装包、schema 一致性与原生凭据库验证 |
+| Windows / macOS / Ubuntu，Node 24 | CI 构建、62 项测试、安装包、schema 一致性与原生凭据库验证 |
 | 交互终端 | Auth PKCE 和 Seek gatekeeper 可打开系统浏览器；默认登录超时 180 秒 |
 | JSON / no-input / 无 TTY | 禁止浏览器启动；已保存会话或明确的 Token/Shop/Seek 凭据可执行读取 |
 | Linux 无 Secret Service、系统凭据库锁定或可选模块缺失 | 持久保存明确失败；支持的产品可使用临时环境凭据，不回退到明文配置 |

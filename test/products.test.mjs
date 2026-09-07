@@ -158,6 +158,49 @@ test('explicit stdin and no-store login work without keyring; ambiguous input is
   assert.equal((await run(['login'])).code, 3);
 });
 
+test('Token in-flight login excludes logout and competing login, then permits complete logout', async t => {
+  let release;
+  let entered;
+  const started = new Promise(resolve => { entered = resolve; });
+  const { run, secrets, requests } = await fixture(t, (req, res) => {
+    release = () => tokenServer(req, res); entered();
+  });
+  const pending = run(['login', '--product', 'token', '--credential', 'gateway'], { CINA_TOKEN_GATEWAY_KEY: gatewayKey });
+  await started;
+  try {
+    assert.equal((await run(['logout', '--product', 'token'])).code, 6);
+    assert.equal((await run(['login', '--product', 'token', '--credential', 'gateway'], { CINA_TOKEN_GATEWAY_KEY: gatewayKey })).code, 6);
+    assert.equal(requests.length, 1);
+  } finally { release(); await pending; }
+  assert.equal(secrets.size, 1);
+  assert.equal((await run(['logout', '--product', 'token'])).code, 0); assert.equal(secrets.size, 0);
+});
+
+test('Token combined logout acquires both locks before clearing either credential and cancellation releases the login lock', async t => {
+  let hold = false;
+  let release;
+  let entered;
+  const started = new Promise(resolve => { entered = resolve; });
+  const { run, secrets } = await fixture(t, (req, res) => {
+    if (hold) { release = () => tokenServer(req, res); entered(); }
+    else tokenServer(req, res);
+  });
+  for (const credential of ['gateway', 'management']) assert.equal((await run(['login', '--product', 'token', '--credential', credential], {
+    CINA_TOKEN_GATEWAY_KEY: gatewayKey, CINA_TOKEN_MANAGEMENT_KEY: managementKey,
+  })).code, 0);
+  assert.equal(secrets.size, 2);
+  hold = true;
+  const controller = new AbortController();
+  const pending = run(['login', '--product', 'token', '--credential', 'management'], { CINA_TOKEN_MANAGEMENT_KEY: managementKey }, { signal: controller.signal });
+  await started;
+  try {
+    assert.equal((await run(['logout', '--product', 'token'])).code, 6);
+    assert.equal(secrets.size, 2, 'No credential may be removed before every selected lock is acquired');
+  } finally { controller.abort(); release(); }
+  assert.equal((await pending).code, 130);
+  assert.equal((await run(['logout', '--product', 'token'])).code, 0); assert.equal(secrets.size, 0);
+});
+
 test('Chain checks network first, pins balance block and preserves values larger than Number.MAX_SAFE_INTEGER', async t => {
   const value = (2n ** 70n) + 1n;
   const { run, requests } = await fixture(t, (req, res) => {

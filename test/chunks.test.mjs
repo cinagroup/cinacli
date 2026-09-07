@@ -42,3 +42,34 @@ test('Missing/tampered chunks and invalid manifests fail closed; oversize values
   await assert.rejects(store.get('key'), { code: 'AUTHENTICATION_FAILED' });
   await store.set('key', 'repaired'); assert.equal(await store.get('key'), 'repaired');
 });
+
+test('Chunk reads follow a newly published generation instead of treating retired chunks as corruption', async () => {
+  const { raw, store } = fixture();
+  await store.set('key', 'x'.repeat(4000));
+  const original = raw.get;
+  let rotate = true;
+  raw.get = async key => {
+    if (key.includes('/') && rotate) { rotate = false; await store.set('key', 'y'.repeat(5000)); }
+    return original(key);
+  };
+  assert.equal(await store.get('key'), 'y'.repeat(5000));
+  rotate = true;
+  raw.get = async key => {
+    if (key.includes('/') && rotate) { rotate = false; await store.remove('key'); }
+    return original(key);
+  };
+  assert.equal(await store.get('key'), undefined);
+});
+
+test('Continuous credential rotation returns a bounded conflict instead of looping indefinitely', async () => {
+  const { raw, store } = fixture();
+  await store.set('key', 'x'.repeat(4000));
+  const original = raw.get;
+  let rotations = 0;
+  raw.get = async key => {
+    if (key.includes('/')) { rotations++; await store.set('key', `${rotations}`.padEnd(4000, 'x')); }
+    return original(key);
+  };
+  await assert.rejects(store.get('key'), { code: 'CONFLICT' });
+  assert.equal(rotations, 3);
+});

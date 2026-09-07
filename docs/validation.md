@@ -58,3 +58,13 @@ Windows 本地类型检查、构建和全部 45 项测试通过，包括错误�
 2026-09-07 再次读取 `https://auth.cinaseek.ai/.well-known/openid-configuration`，HTTP 200，issuer 精确匹配、签名算法 ES256、token 端点支持 none；revocation 端点仅公布 client_secret_basic/client_secret_post/private_key_jwt。因此当前公开部署的 CLI 远程撤销不可用；没有宣称已完成生产用户登录或令牌撤销。
 
 剩余真实验收：Auth 专用 native public client 和真实浏览器授权；Token endpoint/测试 Key；Shop 部署/开放账号；Seek 支持的 gatekeeper 部署或后续 Access 终端方案。M3 发布准备及五产品联合运行验收仍未完成，未发布 npm 包。
+
+## 发布准备与并发复核
+
+提交 `f36a271d53aa2265fe5015aae3581be1a75864db` 的 [三平台 CI](https://github.com/cinagroup/cinacli/actions/runs/34101927432) 已通过。CI 上传的 Ubuntu 安装包已实际下载，SHA256 与清单一致；包含 27 条命令、50 个允许发布文件，包括 Apache-2.0 LICENSE、schema 快照、安装/发布说明和变更记录。GitHub 已将许可证识别为 Apache-2.0。
+
+并发复核新增两项可复现缺陷：Token 退出可在仍运行的登录前成功返回，随后该登录重新保存凭据；长凭据读取可在索引切换、旧分块清理时误报损坏。两项回归测试在修复前失败、修复后通过。Token 登录/退出现使用绑定锁，两类凭据退出先获取全部锁；分块读取复核索引并最多尝试三个版本，持续变化返回 CONFLICT。
+
+新增测试还验证两类凭据退出遇到锁冲突时均不删除、取消释放锁、分块持续变化有界。当前 62 项本地测试、schema 一致性、真实 Windows 凭据库验证通过；线上部署的认证验收不因此改变。
+
+当前 CLI 自身 context 列表为空，约定产品凭据环境变量均未设置。用户明确说明 Auth clientId 和 Token 网关地址“未准备”。不从其他仓库、浏览器或秘密文件寻找替代凭据。npm 公开查询为 404，本机未登录，组织发布权限仍未核验；Apache-2.0 的选择已完成。

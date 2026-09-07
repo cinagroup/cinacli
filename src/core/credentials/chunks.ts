@@ -24,19 +24,34 @@ export function chunkedSecretStore(raw: SecretStore): SecretStore {
   }
   return {
     async get(key, signal) {
-      const root = await raw.get(key, signal);
-      const index = manifest(root);
-      if (!index) return root;
-      let encoded = "";
-      for (let part = 0; part < index.parts; part++) {
-        signal?.throwIfAborted();
-        const value = await raw.get(partKey(key, index.generation, part), signal);
-        if (!value || value.length > 1000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) throw new CliError("AUTHENTICATION_FAILED", "凭据库分块缺失或损坏，请重新登录。");
-        encoded += value;
+      let root = await raw.get(key, signal);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const index = manifest(root);
+        if (!index) return root;
+        let decoded: string | undefined;
+        let invalid: CliError | undefined;
+        try {
+          let encoded = "";
+          for (let part = 0; part < index.parts; part++) {
+            signal?.throwIfAborted();
+            const value = await raw.get(partKey(key, index.generation, part), signal);
+            if (!value || value.length > 1000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) throw new CliError("AUTHENTICATION_FAILED", "凭据库分块缺失或损坏，请重新登录。");
+            encoded += value;
+          }
+          const bytes = Buffer.from(encoded, "base64");
+          if (bytes.length > 65_536 || bytes.toString("base64") !== encoded || createHash("sha256").update(bytes).digest("hex") !== index.sha256) throw new CliError("AUTHENTICATION_FAILED", "凭据库分块校验失败，请重新登录。");
+          decoded = bytes.toString("utf8");
+        } catch (error) {
+          if (!(error instanceof CliError) || error.code !== "AUTHENTICATION_FAILED") throw error;
+          invalid = error;
+        }
+        // A writer may publish a replacement and retire parts while we read the old index.
+        const current = await raw.get(key, signal);
+        if (current !== root) { root = current; continue; }
+        if (invalid) throw invalid;
+        return decoded;
       }
-      const bytes = Buffer.from(encoded, "base64");
-      if (bytes.length > 65_536 || bytes.toString("base64") !== encoded || createHash("sha256").update(bytes).digest("hex") !== index.sha256) throw new CliError("AUTHENTICATION_FAILED", "凭据库分块校验失败，请重新登录。");
-      return bytes.toString("utf8");
+      throw new CliError("CONFLICT", "凭据在读取期间持续更新，请稍后重试。");
     },
     async set(key, value, signal) {
       signal?.throwIfAborted();

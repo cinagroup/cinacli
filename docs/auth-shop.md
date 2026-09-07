@@ -40,6 +40,8 @@ cina logout --json
 
 access token、refresh token 及已验证身份元数据保存在系统凭据库，配置文件只含非敏感设置。较长记录在凭据库内分块：每块最多 1000 字符，记录最多 64 KiB；分块完整写入后才更新索引，并校验整体摘要。兼容旧的单条记录。进程在索引写入时异常退出可能遗留未引用分块，保留在系统凭据库中；不自动扫描或清理其他绑定，旧修订/孤立分块清理仍待后续实现。
 
+读取分块期间会复核索引；若刷新已替换记录，转而读取新版本，若退出已删除记录则返回缺少凭据。最多读取三个版本，持续变化时报 CONFLICT；索引未变化但内容损坏仍返回认证失败。这只处理本地存储并发，不重放 OAuth 刷新或其他网络请求。
+
 `logout` 默认只清理当前 Auth 本机凭据，不退出浏览器、不影响其他产品。显式 `logout --revoke` 仅在元数据声明 public client (`none`) 撤销支持时尝试撤销 refresh/access token；所有请求成功后才清理本机，输出 `remoteRevocation: requested` 表示端点已接受，不保证所有独立 JWT 即时失效。中途失败可能已撤销部分令牌，此时可用普通 `logout` 清理本机。
 
 2026-09-07 公开 discovery 的撤销认证方式仅为 client_secret_basic、client_secret_post 和 private_key_jwt，未公布 none；因此当前公开部署的 `--revoke` 返回 CAPABILITY_UNAVAILABLE。CLI 不通过加入客户端秘密或忽略元数据绕过此限制。真实浏览器/生产账户登录验收尚待专用客户端配置；本地协议测试使用受控浏览器启动替身。
