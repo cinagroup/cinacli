@@ -3,7 +3,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { newWebSocketRpcSession, RpcTarget } from 'capnweb';
@@ -113,6 +113,10 @@ try {
   assert.equal((await cina(['seek', 'whoami'], { CINA_SEEK_SESSION_TOKEN: seekSession })).data.id, 'smoke-user');
   assert.equal((await cina(['seek', 'workspaces', 'list'], { CINA_SEEK_SESSION_TOKEN: seekSession })).data.items[0].createdAt, '2026-09-01T00:00:00.000Z');
   assert.equal((await cina(['login', '--product', 'seek', '--token-stdin', '--no-store'], {}, `${seekSession}\n`)).data.principal, 'smoke-user');
+  const oauthChecks = await execute(process.execPath, ['--test', join(root, 'test', 'auth-oauth.test.mjs')], {
+    cwd: installation, env: { ...env, CINACLI_TEST_INSTALLED_MODULE: pathToFileURL(join(installation, 'node_modules', '@cinagroup', 'cli', 'dist', 'cli.js')).href }, maxBuffer: 4 * 1024 * 1024,
+  });
+  assert.ok(oauthChecks.stdout.includes('pass 10'));
   console.log(JSON.stringify({ ok: true, archive, platform: process.platform, commands: schema.data.commands.length, files: packed.files.length }));
 } finally {
   for (const ws of wsServer.clients) ws.terminate();

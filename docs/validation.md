@@ -41,4 +41,18 @@ Windows 本地类型检查、构建和全部 45 项测试通过，包括错误�
 
 实际安装 alpha.4 产物后已验证 Seek 状态、身份、带 Date 的工作区和 stdin 导入，以及其他产品命令；包提供 24 条命令，包含 40 个允许发布的文件。跨平台执行结果以对应提交 CI 为准。
 
+提交 `8a288d9cb8678d7c4e6a5b82caa7b23b4adf86f0` 的 [Windows / macOS / Ubuntu CI](https://github.com/cinagroup/cinacli/actions/runs/34098503715) 已全部通过。
+
 公开服务证据：`wss://cinaseek.ai/api` 握手 HTTP 302，目标 origin 为 `https://cinagroup.cloudflareaccess.com`、路径 `/cdn-cgi/access/login/cinaseek.ai`。未使用任何凭据或跟随跳转；没有完成真实 Seek 会话或工作区读取。Auth 浏览器 OAuth 和产品真实认证验收仍未完成。
+
+## M2 Auth / 0.1.0-alpha.5
+
+已实现 Auth 浏览器 PKCE、whoami / auth whoami、显式 refresh 和本机退出，可按元数据支持显式请求远程撤销。oauth4webapi 固定为 3.8.8；所有令牌/JWKS/userinfo 请求有响应大小限制，不跟随重定向、不自动重放。
+
+本地类型检查、构建和 58 项测试通过。新增 Auth 测试使用真实 loopback HTTP 服务、RS256/ES256 签名及受控浏览器启动替身，验证 PKCE code verifier、state/nonce、issuer/audience/azp、到期/签发时间、签名、userinfo 用户替换、拒绝授权、过期、撤销、刷新并发锁、超时取消及配置变化。安装后的 alpha.5 包重复通过 10 项 OAuth 协议测试；包共 27 条命令、44 个允许发布文件。
+
+实际 Windows 凭据库验证发现 2400 字符单条记录写入失败，因此新增系统凭据库分块适配。包含约 4200 字符合成 access/refresh token 和 Unicode 身份的长记录，已在真实 Windows 凭据库完成写入、读取、替换和删除；没有读取用户已有凭据。分块测试验证旧记录兼容、分块写入失败、索引提交结果不确定和内容损坏。跨平台行为由该提交 CI 继续验证。
+
+2026-09-07 再次读取 `https://auth.cinaseek.ai/.well-known/openid-configuration`，HTTP 200，issuer 精确匹配、签名算法 ES256、token 端点支持 none；revocation 端点仅公布 client_secret_basic/client_secret_post/private_key_jwt。因此当前公开部署的 CLI 远程撤销不可用；没有宣称已完成生产用户登录或令牌撤销。
+
+剩余真实验收：Auth 专用 native public client 和真实浏览器授权；Token endpoint/测试 Key；Shop 部署/开放账号；Seek 支持的 gatekeeper 部署或后续 Access 终端方案。M3 发布准备及五产品联合运行验收仍未完成，未发布 npm 包。

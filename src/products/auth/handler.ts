@@ -10,19 +10,25 @@ const endpoint = z.string().max(2048).refine(value => {
   try { normalizeEndpoint(value, "auth"); return true; } catch { return false; }
 });
 const names = z.array(z.string().min(1).max(256)).max(256);
-const discovery = z.object({
+export const discovery = z.object({
   issuer: endpoint, authorization_endpoint: endpoint, jwks_uri: endpoint,
   token_endpoint: endpoint.optional(), userinfo_endpoint: endpoint.optional(), revocation_endpoint: endpoint.optional(),
   response_types_supported: names, subject_types_supported: names, id_token_signing_alg_values_supported: names,
   grant_types_supported: names.optional(), code_challenge_methods_supported: names.optional(),
   token_endpoint_auth_methods_supported: names.optional(), scopes_supported: names.optional(),
+  authorization_response_iss_parameter_supported: z.boolean().optional(),
+  revocation_endpoint_auth_methods_supported: names.optional(),
 });
+
+export async function readDiscovery(endpoint: string, runtime: Runtime) {
+  const metadata = parseUpstream(discovery, await requestJson(apiUrl(endpoint, ".well-known/openid-configuration"), { signal: runtime.signal, retryRead: true, maxBytes: 262_144 }));
+  if (metadata.issuer !== endpoint) throw new CliError("PRECONDITION_FAILED", "身份服务元数据的 issuer 与配置不符。");
+  return metadata;
+}
 
 export async function authStatus(input: { context?: string | undefined }, runtime: Runtime) {
   const target = await loadProduct(input, runtime, "auth");
-  const metadata = parseUpstream(discovery, await requestJson(apiUrl(target.endpoint, ".well-known/openid-configuration"), { signal: runtime.signal, retryRead: true, maxBytes: 262_144 }));
-  // OIDC Discovery requires exact issuer equality, not a normalized host comparison.
-  if (metadata.issuer !== target.endpoint) throw new CliError("PRECONDITION_FAILED", "身份服务元数据的 issuer 与配置不符。");
+  const metadata = await readDiscovery(target.endpoint, runtime);
   const grants = metadata.grant_types_supported ?? ["authorization_code", "implicit"];
   return {
     issuer: metadata.issuer, discovery: "validated",
@@ -33,6 +39,6 @@ export async function authStatus(input: { context?: string | undefined }, runtim
       publicClient: metadata.token_endpoint_auth_methods_supported?.includes("none") ?? false,
       refreshToken: grants.includes("refresh_token"), scopes: metadata.scopes_supported ?? [],
     },
-    client: { configured: Boolean(target.context.products.auth?.clientId), registration: "not-verified" }, login: "not-implemented",
+    client: { configured: Boolean(target.context.products.auth?.clientId), registration: "not-verified" }, login: "browser-pkce",
   };
 }

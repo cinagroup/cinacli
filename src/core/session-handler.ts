@@ -10,6 +10,7 @@ type Input = { context?: string | undefined; product: string; credential?: Selec
 const variables = { gateway: "CINA_TOKEN_GATEWAY_KEY", management: "CINA_TOKEN_MANAGEMENT_KEY" } as const;
 
 export async function login(input: Input & { tokenStdin: boolean; secretStdin: boolean; noStore: boolean; noInput: boolean; vendor?: string | undefined }, runtime: Runtime) {
+  if (input.product === "auth") return (await import("../products/auth/session.js")).loginAuth(input, runtime);
   if (input.product === "seek") return (await import("../products/seek/session.js")).loginSeek(input, runtime);
   if (input.vendor) throw new CliError("INVALID_ARGUMENT", "--vendor 仅适用于 Seek 浏览器登录。");
   if (input.product === "shop") return (await import("../products/shop/session.js")).loginShop(input, runtime);
@@ -34,7 +35,9 @@ export async function login(input: Input & { tokenStdin: boolean; secretStdin: b
   return { product: "token", credential: selection, validated: true, saved: !input.noStore, source: input.tokenStdin ? "stdin" : "environment", expiresAt: null, principal: null };
 }
 
-export async function logout(input: Input, runtime: Runtime) {
+export async function logout(input: Input & { revoke: boolean }, runtime: Runtime) {
+  if (input.product === "auth") return (await import("../products/auth/session.js")).logoutAuth(input, runtime);
+  if (input.revoke) throw new CliError("INVALID_ARGUMENT", "--revoke 仅适用于 Auth。");
   if (input.product === "seek") return (await import("../products/seek/session.js")).logoutSeek(input, runtime);
   if (input.product === "shop") return (await import("../products/shop/session.js")).logoutShop(input, runtime);
   if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品的退出登录尚未接入；当前可使用 --product token。");

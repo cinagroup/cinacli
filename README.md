@@ -12,9 +12,9 @@ Cina 产品统一命令行入口，面向开发者、运营人员、脚本和 AI
 
 ## 当前状态
 
-**公共框架、Token/Chain/Shop/Seek 首批命令及 Auth 元数据检查已实现，版本 `0.1.0-alpha.4`；尚未发布 npm 包。**
+**公共框架及五产品首批命令已实现，版本 `0.1.0-alpha.5`；尚未完成五产品真实认证联合验收，也未发布 npm 包。**
 
-当前支持离线 help/schema、context/config、doctor，Token/Shop/Seek 登录及只读命令、Shop 显式会话刷新、Chain 查询和 Auth 服务元数据检查。Chain 公开测试网 RPC 与 Auth 实际 discovery 验证通过；Token/Shop 的真实认证联调待测试配置和凭据。Seek 已通过本地完整 RPC 测试，当前线上入口受 Cloudflare Access 保护，该终端认证模式尚未接入。Auth 浏览器 OAuth 继续实施。
+当前提供 27 条命令：离线 help/schema、context/config、doctor，Auth 浏览器 PKCE 登录、身份读取及显式刷新，Token/Shop/Seek 登录及只读命令、Shop 显式刷新和 Chain 查询。Chain 公开测试网 RPC 与 Auth 实际 discovery 验证通过；Auth 真实登录待专用 public client，Token/Shop 的真实认证联调待测试配置和凭据。Seek 已通过本地完整 RPC 测试，当前线上入口受 Cloudflare Access 保护，该终端认证模式尚未接入。
 
 目标是统一命令、环境配置、凭据管理与输出契约。首版按各产品现有认证方式接入；跨产品单点登录按服务端接入进度推进。
 
@@ -76,7 +76,7 @@ pnpm test:keyring
 
 `pnpm check` 运行类型检查、构建和契约测试。`test:package` 在临时目录离线安装实际打包产物并执行 `cina`，产物保留在 `artifacts/`。`test:keyring` 使用一次性合成凭据验证系统凭据库并删除测试记录；Linux 需要可用且已解锁的 Secret Service。
 
-`.github/workflows/ci.yml` 在 Windows、macOS、Linux 运行相同验证。系统凭据库不可用时明确报错，支持显式环境变量覆盖，不会回退保存明文凭据。当前支持 Token key 导入、Shop 登录/刷新和 Seek gatekeeper 登录/会话导入；Auth OAuth 登录和刷新尚未实现。
+`.github/workflows/ci.yml` 在 Windows、macOS、Linux 运行相同验证。系统凭据库不可用时明确报错，不会回退保存明文凭据。Token/Shop/Seek 可使用对应的显式环境变量；Auth 使用浏览器登录后保存的独立 OAuth 会话，访问令牌过期时需显式刷新。
 
 Seek 在已配置且支持 gatekeeper 的部署中可运行：
 

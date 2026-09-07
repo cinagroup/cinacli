@@ -2,7 +2,7 @@
 
 状态：实施中；更新日期：2026-09-07。
 
-M0、M1 与 M2 首批 alpha.3 已推送且三平台 CI 通过。alpha.4 加入 Seek 登录与读取，本地协议及安装验证通过。Auth 公开 discovery 验证通过，Auth 浏览器 OAuth 继续实施；Token/Shop/Seek 真实认证验收待测试配置与凭据。详细证据见[验证记录](validation.md)。尚未发布 npm 包。
+M0 至 alpha.4 已推送且三平台 CI 通过。alpha.5 加入 Auth PKCE 登录、userinfo、显式刷新和系统凭据分块存储，本地协议测试及长凭据原生存储验证通过。Auth 公开 discovery 验证通过，真实浏览器登录待专用 public client；Token/Shop/Seek 真实认证验收待测试配置与凭据。详细证据见[验证记录](validation.md)。尚未发布 npm 包。
 
 ## 目标
 
@@ -51,7 +51,7 @@ CLI 实现和 29 项本地契约测试已完成；Chain 公开测试网读取已
 
 ## M2：Auth、Shop、Seek 接入
 
-当前已实现 Auth status；Shop 读取与会话、Seek gatekeeper 登录/导入与身份/工作区读取均通过本地协议测试。Auth 浏览器 OAuth 继续推进。Seek 当前线上入口受 Cloudflare Access 保护，真实认证验收待支持的部署或独立 Access 终端接入方案；不将本地 RPC 测试或公开 discovery 当成用户登录验证。
+当前已实现 Auth status、PKCE 登录、userinfo、显式刷新和退出；Shop 读取与会话、Seek gatekeeper 登录/导入与身份/工作区读取均通过本地协议测试。Auth 真实浏览器登录待专用 public client。Seek 当前线上入口受 Cloudflare Access 保护，真实认证验收待支持的部署或独立 Access 终端接入方案；不将本地协议测试或公开 discovery 当成用户登录验证。
 
 | 工作项 | CLI 交付 | 产品侧前提 |
 | --- | --- | --- |
@@ -103,4 +103,4 @@ Auth 用户/组织管理命令不在本阶段靠现有 OIDC 身份 scope 强行�
 - 初始设计文档提交已推送，首批实现为 M0 公共框架，未修改五个产品仓库。
 - M0、M1 与 M2 首批 alpha.3 三平台 CI 通过；Seek 接入后的 alpha.4 本地测试扩展为 45 项，安装包提供 24 条命令。
 - M1 已实现 Token 三项业务读取、两类 key 的验证保存与本机退出，以及 Chain 状态/原生余额查询；公开 Chain RPC 联调通过。
-- M2 已交付 Auth status、Shop 读取与会话管理、Seek gatekeeper 登录和独立会话读取。Auth 浏览器登录及 Token/Shop/Seek 真实认证验收继续推进，五产品联合运行尚未完成。
+- M2 已交付 Auth status、PKCE 登录/身份/刷新/退出、Shop 读取与会话管理、Seek gatekeeper 登录和独立会话读取。Auth 真实浏览器登录及 Token/Shop/Seek 真实认证验收继续推进，五产品联合运行尚未完成。

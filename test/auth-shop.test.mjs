@@ -58,7 +58,7 @@ test('Auth status validates discovery at issuer path without credentials or visi
   const result = await run(['auth', 'status'], { CINA_SHOP_ACCESS_TOKEN: token });
   assert.equal(result.code, 0); assert.equal(result.body.data.issuer, endpoint);
   assert.deepEqual(result.body.data.client, { configured: true, registration: 'not-verified' });
-  assert.equal(result.body.data.login, 'not-implemented');
+  assert.equal(result.body.data.login, 'browser-pkce');
   assert.equal(result.body.data.advertised.pkceS256, true);
   assert.equal(result.body.data.advertised.publicClient, true);
   assert.equal(requests.length, 1); assert.equal(requests[0].url.pathname, '/service/.well-known/openid-configuration');

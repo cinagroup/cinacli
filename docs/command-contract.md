@@ -1,6 +1,6 @@
 # 首版命令及输出契约
 
-状态：命令契约；更新日期：2026-09-07。**公共框架、Token/Shop/Seek/Chain 与 Auth status 已实现；Auth 浏览器 OAuth 尚未实现。** 登录/退出当前支持显式 `--product token|shop|seek`。各阶段对应[路线图](roadmap.md)中的里程碑。
+状态：命令契约；更新日期：2026-09-07。**公共框架及五产品首批命令已实现；真实认证联合验收待完成。** 登录/退出默认 Auth，支持显式 `--product auth|token|shop|seek`。各阶段对应[路线图](roadmap.md)中的里程碑。
 
 ## 1. 命令范围
 
@@ -24,7 +24,9 @@ doctor 分别输出 configuration、connectivity、adapter、authorization 和 c
 
 Token 登录必须指定 `--credential gateway|management`，通过环境变量或显式 `--token-stdin` 输入，验证后存入系统凭据库；`--no-store` 仅验证。Token 退出仅清理本机绑定，不远程撤销 API key。
 
-Shop 登录使用 `CINA_SHOP_APP_ID` 和 `CINA_SHOP_APP_SECRET`，或 `--secret-stdin`；只保存返回的 token、账号和到期信息。`shop session refresh` 是显式 auth-state 操作、禁止自动重试，刷新不确定错误标记 `retryable=false`。Shop 退出仅清除本机绑定，远程撤销为 not-supported。默认 `login` / `logout` 对应的 Auth 流程尚未支持，明确返回 CAPABILITY_UNAVAILABLE；未提供 `--all-products`。
+Shop 登录使用 `CINA_SHOP_APP_ID` 和 `CINA_SHOP_APP_SECRET`，或 `--secret-stdin`；只保存返回的 token、账号和到期信息。`shop session refresh` 是显式 auth-state 操作、禁止自动重试，刷新不确定错误标记 `retryable=false`。Shop 退出仅清除本机绑定，远程撤销为 not-supported。未提供 `--all-products`。
+
+Auth 默认 `login` 使用已注册 native public client、PKCE S256 和临时 IPv4 loopback 回调；`whoami` / `auth whoami` 调用 userinfo 核对用户。`auth session refresh` 显式轮换令牌，失败不自动重试。默认 logout 只清理本机；`--revoke` 要求部署公布 public client 撤销支持，成功结果为 requested。当前公开部署未公布该支持，返回 CAPABILITY_UNAVAILABLE。详见[Auth 说明](auth-shop.md)。
 
 ### 产品只读命令
 
@@ -33,6 +35,7 @@ Seek 登录使用已验证的 `--vendor` 浏览器流程，或通过环境变量
 | 命令 | 上游能力 | 认证及限制 | 阶段 |
 | --- | --- | --- | --- |
 | `cina auth status` | 配置的 issuer discovery | 无需业务凭据；只说明身份服务元数据状态 | M2 |
+| `cina whoami` / `cina auth whoami` | discovery userinfo endpoint | 已验证的 Auth 会话；仅身份 scope | M2 |
 | `cina token models list` | `GET /v1/models` | Gateway key；保留上游 kind 和 route_groups 的默认语义 | M1 |
 | `cina token account show` | `GET /v1/me` | Gateway key；返回当前 Key 对应工作区、预算，不等同于用户身份 | M1 |
 | `cina token workspaces list` | `GET /api/v1/workspaces` | Management key；按服务端账号权限返回 | M1 |

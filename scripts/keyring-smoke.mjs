@@ -16,6 +16,12 @@ try {
   const loaded = await resolveCredential(store, binding, {});
   assert.equal(loaded.credential.secret, secret);
   assert.equal(loaded.source, 'keyring');
+  // OAuth access + refresh tokens can exceed a native Windows credential blob.
+  const oauthSized = JSON.stringify({ accessToken: 'a'.repeat(2400), refreshToken: 'b'.repeat(1800), subject: '测试用户🔑' });
+  await store.set(credentialKey(binding), oauthSized);
+  assert.equal(await store.get(credentialKey(binding)), oauthSized);
+  await saveCredential(store, { version: 1, binding, secret, principal: null, scopes: [], expiresAt: null });
+  assert.equal((await resolveCredential(store, binding, {})).credential.secret, secret);
 } finally {
   await store.remove(credentialKey(binding));
 }

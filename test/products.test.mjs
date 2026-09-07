@@ -155,7 +155,7 @@ test('explicit stdin and no-store login work without keyring; ambiguous input is
   const count = requests.length;
   assert.equal((await run(['login', '--product', 'token', '--credential', 'gateway', '--token-stdin'], { CINA_TOKEN_GATEWAY_KEY: gatewayKey }, overrides)).code, 2);
   assert.equal(requests.length, count);
-  assert.equal((await run(['login'])).code, 8);
+  assert.equal((await run(['login'])).code, 3);
 });
 
 test('Chain checks network first, pins balance block and preserves values larger than Number.MAX_SAFE_INTEGER', async t => {

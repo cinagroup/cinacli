@@ -1,6 +1,6 @@
 # 总体架构与认证方案
 
-状态：架构方案；更新日期：2026-09-07。公共框架、Token/Shop/Seek/Chain 适配与 Auth status 已实现；Auth 浏览器 OAuth 仍在实施。实际能力以 README 和 cina schema 为准。
+状态：架构方案；更新日期：2026-09-07。公共框架及五产品首批适配已实现，包含 Auth 浏览器 PKCE、userinfo 与显式刷新；真实认证联合验收尚未完成。实际能力以 README 和 cina schema 为准。
 
 ## 1. 设计决定
 
@@ -141,7 +141,7 @@ ID token 用于客户端验证登录结果；产品 API 使用其支持的访问
 - 系统凭据库不可用时，支持显式环境变量或仅本进程使用的安全输入；需要持久保存的操作明确返回不可用，不静默写入明文配置。
 - 不支持把密钥直接作为常规命令行参数；可通过隐藏输入、明确的 stdin 输入或 CI 注入。诊断、schema、日志、错误输出都不回显秘密。
 - 同一凭据的 refresh 需要进程间协调和原子更新，避免轮换后旧 refresh token 覆盖新值。refresh 结果不确定时，不盲目重复提交。
-- `logout` 删除所选产品的本地凭据，若服务端提供对应撤销能力则尝试撤销。输出分别标明 localCleared 和 remoteRevocation；导入的 API key 默认仅移除本地副本，不擅自吊销仍被其他系统使用的 key。
+- `logout` 删除所选产品的本地凭据；Auth 显式 `--revoke` 在元数据声明 public client 撤销支持时请求远程撤销。输出分别标明 localCleared 和 remoteRevocation；导入的 API key 默认仅移除本地副本，不擅自吊销仍被其他系统使用的 key。
 - 核心身份 logout 不隐含撤销全部产品凭据，产品级与全产品退出须明确选择；命令也不能从父进程移除环境变量，需在结果中说明相关凭据来源仍由调用方管理。
 
 ## 6. 请求和版本行为
@@ -158,6 +158,6 @@ CLI 版本与 `schemaVersion`、输出 `contractVersion` 分开。0.x 阶段也�
 
 M0 已实现配置的严格版本校验、写入锁和原子替换；产品配置发生变化时提升凭据修订号，即使把 endpoint 改回旧值也不复用旧绑定。配置锁遇到并发写入直接报冲突；若进程异常退出遗留 config.lock，需确认没有写入进程后手动移除，CLI 不自动抢占锁。
 
-凭据适配器提供读取、保存、删除、过期检查和产品环境隔离。M1 开放 Token key 导入和本机退出，M2 接入 Shop appid/appsecret 登录、带锁显式刷新/退出和 Seek gatekeeper 登录/会话导入；Auth OAuth 刷新及旧修订清理后续接入。显式变量只覆盖本次绑定，明确 login 才持久保存。Shop 不保存 appsecret，Seek 不借用其他产品令牌；Chain 当前使用公开 RPC。
+凭据适配器提供读取、保存、删除、过期检查和产品环境隔离。M1 开放 Token key 导入和本机退出，M2 接入 Shop appid/appsecret 登录、带锁显式刷新/退出、Seek gatekeeper 登录/会话导入和 Auth OAuth 登录/显式刷新。显式变量只覆盖本次绑定，明确 login 才持久保存。Shop 不保存 appsecret，Seek 不借用其他产品令牌；Chain 当前使用公开 RPC。长记录在系统凭据库内分块、完整写入后切换索引，最大 64 KiB；旧修订和异常中断留下的孤立分块清理尚未实现。
 
-doctor 的网络检查仅打开 TCP/TLS 连接，不验证产品协议、用户权限或部署版本；五个模块均有实际命令，但 Auth 当前仅接入 discovery。通用 JSON transport 具备截止时间、取消、响应大小限制、有限读取重试和禁止跟随重定向等行为。Seek 使用 Cap’n Web 0.12.0 / ws 8.21.3，每次调用释放 RPC 对象与连接，不自动重连。轻量命令定义可离线加载，实际 handler 在执行时动态导入。
+doctor 的网络检查仅打开 TCP/TLS 连接，不验证产品协议、用户权限或部署版本。通用 JSON transport 具备截止时间、取消、响应大小限制、有限读取重试和禁止跟随重定向等行为。Auth 使用 oauth4webapi 3.8.8 和独立的受限 HTTP 适配，PKCE/刷新/userinfo/JWKS 不自动重试；Seek 使用 Cap’n Web 0.12.0 / ws 8.21.3，每次调用释放 RPC 对象与连接，不自动重连。轻量命令定义可离线加载，实际 handler 在执行时动态导入。

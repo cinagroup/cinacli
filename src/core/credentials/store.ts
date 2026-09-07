@@ -4,6 +4,7 @@ import { CliError } from "../errors.js";
 import { contextNameSchema, productEndpoint, productSchema } from "../context/schema.js";
 import type { Context, Product } from "../context/schema.js";
 import type { Environment } from "../context/store.js";
+import { chunkedSecretStore } from "./chunks.js";
 
 const schemes = {
   "auth-oauth": { product: "auth", variable: undefined },
@@ -15,7 +16,7 @@ const schemes = {
 } as const;
 export type CredentialScheme = keyof typeof schemes;
 const schemeSchema = z.enum(Object.keys(schemes) as [CredentialScheme, ...CredentialScheme[]]);
-const bindingSchema = z.strictObject({
+export const bindingSchema = z.strictObject({
   contextId: z.uuid(),
   contextName: contextNameSchema,
   epoch: z.number().int().nonnegative().safe(),
@@ -58,11 +59,11 @@ export function systemSecretStore(service = "cinacli/v1"): SecretStore {
       throw new CliError("CAPABILITY_UNAVAILABLE", "系统凭据库不可用或已锁定；凭据未回退到明文文件。");
     }
   }
-  return {
+  return chunkedSecretStore({
     get: (key, signal) => safely(async () => (await (await entry(key)).getPassword(signal)) ?? undefined, signal),
     set: (key, value, signal) => safely(async () => (await entry(key)).setPassword(value, signal), signal),
     remove: (key, signal) => safely(async () => (await entry(key)).deleteCredential(signal), signal),
-  };
+  });
 }
 
 export async function probeSecretStore(store: SecretStore, signal?: AbortSignal): Promise<boolean> {

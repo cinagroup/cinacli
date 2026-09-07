@@ -36,7 +36,7 @@
 | auth status | 配置 issuer，校验 discovery 元数据 |
 | login / whoami | 已注册 CLI public client + PKCE + discovery userinfo endpoint |
 
-Auth status 已实现并对 `https://auth.cinaseek.ai` 的实际 discovery 验证通过；不会将元数据公布的能力视为 CLI 已注册或用户已授权。浏览器 OAuth 尚未实现。
+Auth status 已实现并对 `https://auth.cinaseek.ai` 的实际 discovery 验证通过；不会将元数据公布的能力视为 CLI 已注册或用户已授权。alpha.5 已实现浏览器 PKCE、userinfo、带锁显式刷新及退出，本地 HTTP 协议测试通过；真实浏览器登录仍待注册客户端与用户授权。
 
 需补齐：
 
