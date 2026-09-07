@@ -1,6 +1,6 @@
 {
   "name": "@cinagroup/cli",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "description": "Unified command-line tools for Cina products",
   "type": "module",
   "bin": { "cina": "dist/bin.js" },

@@ -9,6 +9,8 @@ import type { Command, Runtime } from "./command.js";
 import { tokenCommands } from "../products/token/commands.js";
 import { chainCommands } from "../products/chain/commands.js";
 import { sessionCommands } from "./sessions.js";
+import { authCommands } from "../products/auth/commands.js";
+import { shopCommands } from "../products/shop/commands.js";
 export { globalShape, globalFlags } from "./command.js";
 export type { Command, Flag, Runtime } from "./command.js";
 
@@ -124,6 +126,8 @@ const commands: Command[] = [
   ...tokenCommands,
   ...chainCommands,
   ...sessionCommands,
+  ...authCommands,
+  ...shopCommands,
 ];
 
 export function commandRegistry(): readonly Command[] { return commands; }

@@ -2,7 +2,7 @@
 
 状态：实施中；更新日期：2026-09-07。
 
-设计文档与 M0 已推送，M0 的 Windows、macOS、Linux CI 已全部通过。M1 Token/Chain 命令与凭据导入已实现，公开 Chain RPC 联调通过；Token 真实认证联调待 endpoint 和测试密钥。详细证据见[验证记录](validation.md)。尚未发布 npm 包。
+M0 与 M1 已推送且三平台 CI 全部通过。M2 首批实现包括 Auth status、Shop 商品/订单读取、登录和显式刷新；Auth 公开 discovery 验证通过。Token/Shop 真实认证联调待测试配置与凭据。详细证据见[验证记录](validation.md)。尚未发布 npm 包。
 
 ## 目标
 
@@ -50,6 +50,8 @@ CLI 实现和 29 项本地契约测试已完成；Chain 公开测试网读取已
 外部依赖：可访问的 Token endpoint、两类测试 key、指定 Chain RPC。缺少凭据时先完成适配器契约测试，并把真实联调标为未完成。
 
 ## M2：Auth、Shop、Seek 接入
+
+当前已实现 Auth status；Shop 的商品/订单摘要、登录、显式刷新和退出已通过本地契约测试。Auth 浏览器 OAuth 与 Seek 接入继续推进，不将公开 discovery 验证当成用户登录验证。
 
 | 工作项 | CLI 交付 | 产品侧前提 |
 | --- | --- | --- |
@@ -99,6 +101,6 @@ Auth 用户/组织管理命令不在本阶段靠现有 OIDC 身份 scope 强行�
 - 已核实 GitHub 上新建的 `cinagroup/cinacli` 空仓库，并克隆到本地工作目录。
 - 已完成五产品源码接入核查、命令设计、认证边界和实施路线图。
 - 初始设计文档提交已推送，首批实现为 M0 公共框架，未修改五个产品仓库。
-- M0 三平台构建、18 项契约测试、安装包和原生凭据库验证通过；M1 本地测试扩展为 29 项。
+- M0 三平台构建、18 项契约测试、安装包和原生凭据库验证通过；M1 三平台 29 项验证通过，M2 首批本地测试扩展为 37 项。
 - M1 已实现 Token 三项业务读取、两类 key 的验证保存与本机退出，以及 Chain 状态/原生余额查询；公开 Chain RPC 联调通过。
-- Token 真实认证验收与 M2 Auth、Shop、Seek 接入继续推进。OAuth 刷新和五产品联合运行尚未完成。
+- M2 首批交付 Auth status 及 Shop 商品/订单读取、登录、显式刷新和本机退出。Token/Shop 真实认证、Auth 浏览器登录和 Seek 接入继续推进，五产品联合运行尚未完成。

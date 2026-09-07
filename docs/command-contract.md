@@ -1,6 +1,6 @@
 # 首版命令及输出契约
 
-状态：命令契约；更新日期：2026-09-07。**M0 与 M1 Token/Chain 命令已实现；M2 Auth/Shop/Seek 尚未实现。** 登录/退出当前只支持显式 `--product token`。各阶段对应[路线图](roadmap.md)中的里程碑。
+状态：命令契约；更新日期：2026-09-07。**M0、M1 Token/Chain 及 M2 Auth status、Shop 命令已实现；Auth 浏览器 OAuth 和 Seek 尚未实现。** 登录/退出当前支持显式 `--product token|shop`。各阶段对应[路线图](roadmap.md)中的里程碑。
 
 ## 1. 命令范围
 
@@ -20,9 +20,11 @@
 
 `context use` 对不存在的 context 报错；`config set` 校验允许的字段和 URL，不接受任意代码或秘密字段。`doctor` 缺少某产品配置时逐项报告，不把其他已正常服务标记为失败；聚合状态区分 ready、not-configured、unsupported、unknown、failed。
 
-doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；Token/Chain adapter 为 implemented，其他为 not-implemented，authorization 仍为 unknown，聚合 status 为 attention。配置解析、超时或中断等执行失败仍返回相应非零退出码。
+doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；Auth/Token/Shop/Chain adapter 为 implemented，Seek 为 not-implemented，authorization 仍为 unknown，聚合 status 为 attention。adapter 只表示该产品存在已实现命令。配置解析、超时或中断等执行失败仍返回相应非零退出码。
 
-Token 登录必须指定 `--credential gateway|management`，通过环境变量或显式 `--token-stdin` 输入，验证后存入系统凭据库；`--no-store` 仅验证。Token 退出仅清理本机绑定，不远程撤销 API key。默认 `login` / `logout` 对应的 Auth 流程尚未支持，明确返回 CAPABILITY_UNAVAILABLE；未提供 `--all-products`。
+Token 登录必须指定 `--credential gateway|management`，通过环境变量或显式 `--token-stdin` 输入，验证后存入系统凭据库；`--no-store` 仅验证。Token 退出仅清理本机绑定，不远程撤销 API key。
+
+Shop 登录使用 `CINA_SHOP_APP_ID` 和 `CINA_SHOP_APP_SECRET`，或 `--secret-stdin`；只保存返回的 token、账号和到期信息。`shop session refresh` 是显式 auth-state 操作、禁止自动重试，刷新不确定错误标记 `retryable=false`。Shop 退出仅清除本机绑定，远程撤销为 not-supported。默认 `login` / `logout` 对应的 Auth 流程尚未支持，明确返回 CAPABILITY_UNAVAILABLE；未提供 `--all-products`。
 
 ### 产品只读命令
 

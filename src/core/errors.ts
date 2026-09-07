@@ -28,12 +28,12 @@ export class CliError extends Error {
   readonly exitCode: number;
   readonly retryable: boolean;
 
-  constructor(readonly code: ErrorCode, message?: string) {
+  constructor(readonly code: ErrorCode, message?: string, options?: { retryable: false }) {
     const definition = errorDefinitions[code];
     super(message ?? definition[1]);
     this.name = "CliError";
     this.exitCode = definition[0];
-    this.retryable = definition[2];
+    this.retryable = definition[2] && options?.retryable !== false;
   }
 }
 

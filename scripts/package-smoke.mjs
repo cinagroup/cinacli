@@ -30,6 +30,14 @@ async function pnpm(args, overrides = {}, stdin = '') {
 const syntheticKey = 'package-smoke-synthetic-key';
 const rpcMethods = [];
 const server = createServer(async (req, res) => {
+  if (req.url === '/.well-known/openid-configuration') {
+    const base = `http://127.0.0.1:${server.address().port}`;
+    return res.end(JSON.stringify({ issuer: base, authorization_endpoint: `${base}/authorize`, jwks_uri: `${base}/jwks`, response_types_supported: ['code'], subject_types_supported: ['public'], id_token_signing_alg_values_supported: ['RS256'] }));
+  }
+  if (req.url.startsWith('/outapi/product/list')) {
+    if (req.headers.authorization !== `Bearer ${syntheticKey}`) return res.writeHead(401).end();
+    return res.end(JSON.stringify({ status: 200, data: { list: [{ id: 1, store_name: 'Sample', image: '', price: '1.25', stock: 2 }], count: 1 } }));
+  }
   if (req.url === '/v1/me') {
     if (req.headers.authorization !== `Bearer ${syntheticKey}`) return res.writeHead(401).end();
     return res.end(JSON.stringify({ workspace_id: 'smoke', budget_max: null, budget_spent: 1.5, budget_period: 'monthly', budget_reset_at: null, billing_currency: 'USD' }));
@@ -37,6 +45,10 @@ const server = createServer(async (req, res) => {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   const body = JSON.parse(Buffer.concat(chunks).toString());
+  if (req.url === '/outapi/get_token') {
+    if (body.appid !== 'smoke-app' || body.appsecret !== syntheticKey) return res.writeHead(401).end();
+    return res.end(JSON.stringify({ status: 200, data: { access_token: syntheticKey, exp_time: Math.floor(Date.now() / 1000) + 3600, auth_info: { id: 1, appid: 'smoke-app' } } }));
+  }
   rpcMethods.push(body.method);
   const result = { eth_chainId: '0x14a34', eth_blockNumber: '0x123', eth_getBalance: '0x10000000000000001' }[body.method];
   res.end(JSON.stringify({ jsonrpc: '2.0', id: body.id, result }));
@@ -73,6 +85,13 @@ try {
   assert.equal(login.data.validated, true);
   assert.equal(login.data.saved, false);
   assert.equal(login.data.source, 'stdin');
+  await cina(['config', 'set', 'auth.issuer', endpoint]);
+  assert.equal((await cina(['auth', 'status'])).data.discovery, 'validated');
+  await cina(['config', 'set', 'shop.endpoint', endpoint]);
+  assert.equal((await cina(['shop', 'products', 'list'], { CINA_SHOP_ACCESS_TOKEN: syntheticKey })).data.items[0].price, '1.25');
+  const shopLogin = await cina(['login', '--product', 'shop', '--secret-stdin', '--no-store'], { CINA_SHOP_APP_ID: 'smoke-app' }, `${syntheticKey}\n`);
+  assert.equal(shopLogin.data.saved, false);
+  assert.equal(shopLogin.data.principal, '1');
   console.log(JSON.stringify({ ok: true, archive, platform: process.platform, commands: schema.data.commands.length, files: packed.files.length }));
 } finally {
   server.closeAllConnections();

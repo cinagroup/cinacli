@@ -16,6 +16,10 @@ Token 地址是占位示例，必须换成实际部署。端点使用 HTTPS（�
 
 ## Token 凭据
 
+测试 Key 可在实际部署的用户中心 `/account/keys` 创建。先选择测试工作区，创建专用 Gateway Key；同页的“Management API 密钥”需要个人账户所有者或组织工作区管理员权限。完整 Key 只在创建时返回一次，建议设置短有效期。Management Key 具备管理权限，使用独立测试账户；它不是平台后台 `sk-admin-*` 运维密钥。源码已存在入口不代表所有部署都已上线。
+
+这两类 Key 用于验证 CLI 对真实接口的认证和权限边界；本地契约测试使用合成 Key，不要求真实密钥。只做 Gateway 读取时无需准备 Management Key，首批命令也不调用模型生成。
+
 | 命令 | 凭据 | 临时环境变量 |
 | --- | --- | --- |
 | `token models list`、`token account show` | Gateway key | `CINA_TOKEN_GATEWAY_KEY` |

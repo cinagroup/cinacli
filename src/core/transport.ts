@@ -82,6 +82,7 @@ export async function requestJson(endpoint: string, options: JsonRequest): Promi
       if (response.status === 404) throw new CliError("RESOURCE_NOT_FOUND");
       if (response.status === 409) throw new CliError("CONFLICT");
       if (response.status === 429) throw new CliError("RATE_LIMITED");
+      if (response.status === 501) throw new CliError("CAPABILITY_UNAVAILABLE");
       if (response.status >= 500) throw new CliError("UPSTREAM_UNAVAILABLE");
       throw new CliError("UPSTREAM_CONTRACT_MISMATCH");
     }

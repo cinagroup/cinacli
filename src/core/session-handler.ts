@@ -9,8 +9,10 @@ type Selection = "gateway" | "management";
 type Input = { context?: string | undefined; product: string; credential?: Selection | undefined };
 const variables = { gateway: "CINA_TOKEN_GATEWAY_KEY", management: "CINA_TOKEN_MANAGEMENT_KEY" } as const;
 
-export async function login(input: Input & { tokenStdin: boolean; noStore: boolean }, runtime: Runtime) {
-  if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品的登录尚未接入；当前可使用 --product token。");
+export async function login(input: Input & { tokenStdin: boolean; secretStdin: boolean; noStore: boolean }, runtime: Runtime) {
+  if (input.product === "shop") return (await import("../products/shop/session.js")).loginShop(input, runtime);
+  if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品的登录尚未接入；当前支持 Token 和 Shop。");
+  if (input.secretStdin) throw new CliError("INVALID_ARGUMENT", "Token 密钥管道输入使用 --token-stdin。");
   const selection = input.credential;
   if (!selection) throw new CliError("INVALID_ARGUMENT", "Token 登录需要明确指定 --credential gateway 或 management。");
   const { context, endpoint } = await loadProduct(input, runtime, "token");
@@ -27,10 +29,11 @@ export async function login(input: Input & { tokenStdin: boolean; noStore: boole
     if (credentialKey(credentialBinding(current, binding.scheme)) !== credentialKey(binding)) throw new CliError("CONFLICT", "认证期间产品配置发生变化，请重试。");
     await saveCredential(runtime.store, { version: 1, binding, secret, principal: null, scopes: [], expiresAt: null }, runtime.signal);
   }
-  return { product: "token", credential: selection, validated: true, saved: !input.noStore, source: input.tokenStdin ? "stdin" : "environment" };
+  return { product: "token", credential: selection, validated: true, saved: !input.noStore, source: input.tokenStdin ? "stdin" : "environment", expiresAt: null, principal: null };
 }
 
 export async function logout(input: Input, runtime: Runtime) {
+  if (input.product === "shop") return (await import("../products/shop/session.js")).logoutShop(input, runtime);
   if (input.product !== "token") throw new CliError("CAPABILITY_UNAVAILABLE", "此产品的退出登录尚未接入；当前可使用 --product token。");
   const { context } = await loadProduct(input, runtime, "token");
   const selected: Selection[] = input.credential ? [input.credential] : ["gateway", "management"];

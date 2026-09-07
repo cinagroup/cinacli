@@ -84,8 +84,8 @@ test('invalid arguments produce one sanitized JSON failure with exit 2', async t
 
 test('unknown product commands are errors, not fabricated empty success', async t => {
   const directory = await fixture(t);
-  assert.equal((await run(directory, ['shop', 'orders', 'list', '--json'])).exitCode, 2);
-  const result = await run(directory, ['schema', 'shop.orders.list', '--json']);
+  assert.equal((await run(directory, ['seek', 'workspaces', 'list', '--json'])).exitCode, 2);
+  const result = await run(directory, ['schema', 'seek.workspaces.list', '--json']);
   assert.equal(result.exitCode, 8);
   assert.equal(result.json.error.code, 'CAPABILITY_UNAVAILABLE');
 });
@@ -146,10 +146,10 @@ test('invalid config and concurrent writer never overwrite the file', async t =>
 });
 
 test('doctor reports missing adapters and unavailable keyring without claiming auth or leaking errors', async t => {
-  const result = await run(await fixture(t), ['doctor', '--product', 'shop', '--json']);
+  const result = await run(await fixture(t), ['doctor', '--product', 'seek', '--json']);
   assert.equal(result.exitCode, 0);
   assert.equal(result.json.data.status, 'attention');
   assert.equal(result.json.data.credentialStore, 'unavailable');
-  assert.deepEqual(result.json.data.checks, [{ product: 'shop', configuration: 'not-configured', connectivity: 'not-checked', adapter: 'not-implemented', authorization: 'unknown' }]);
+  assert.deepEqual(result.json.data.checks, [{ product: 'seek', configuration: 'not-configured', connectivity: 'not-checked', adapter: 'not-implemented', authorization: 'unknown' }]);
   assert.ok(!result.stdout.includes('private-backend-detail'));
 });
