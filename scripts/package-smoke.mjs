@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { newWebSocketRpcSession, RpcTarget } from 'capnweb';
+import { createHash } from 'node:crypto';
 
 const execute = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -76,9 +77,14 @@ try {
   const archive = join(artifacts, `cinagroup-cli-${manifest.version}.tgz`);
   const packed = JSON.parse((await pnpm(['pack', '--config.ignore-scripts=true', '--out', archive, '--json'])).stdout);
   assert.ok(packed.files.some(file => file.path === 'dist/bin.js'));
-  assert.ok(packed.files.every(file => /^(dist\/|docs\/|README\.md$|package\.json$)/.test(file.path)));
+  const docs = new Set(['architecture', 'auth-shop', 'command-contract', 'installation', 'product-integration', 'release', 'roadmap', 'seek', 'support', 'token-chain', 'validation'].map(name => `docs/${name}.md`));
+  assert.ok(packed.files.every(file => /^(?:README\.md|CHANGELOG\.md|LICENSE|package\.json|docs\/schema\.json)$/.test(file.path) || docs.has(file.path) || /^dist\/(?:[a-z][a-z0-9-]*\/)*[a-z][a-z0-9-]*\.js$/.test(file.path)));
+  for (const required of ['CHANGELOG.md', 'LICENSE', 'docs/schema.json', 'docs/installation.md', 'docs/support.md', 'docs/release.md']) assert.ok(packed.files.some(file => file.path === required));
   await writeFile(join(installation, 'package.json'), JSON.stringify({ name: 'cinacli-package-smoke', private: true, type: 'module' }));
   await pnpm(['--dir', installation, 'add', archive, '--offline', '--ignore-scripts', '--no-lockfile']);
+  const installedRoot = join(installation, 'node_modules', '@cinagroup', 'cli');
+  assert.equal(JSON.parse(await readFile(join(installedRoot, 'package.json'), 'utf8')).license, 'Apache-2.0');
+  assert.equal((await readFile(join(installedRoot, 'LICENSE'), 'utf8')).replaceAll('\r\n', '\n'), (await readFile(join(root, 'LICENSE'), 'utf8')).replaceAll('\r\n', '\n'));
   async function cina(args, overrides, stdin) {
     const stdout = (await pnpm(['--dir', installation, 'exec', 'cina', ...args, '--json'], overrides, stdin)).stdout;
     assert.ok(!stdout.includes(syntheticKey));
@@ -88,6 +94,12 @@ try {
   assert.equal((await cina(['--help'], { CINA_CONFIG_DIR: 'deliberately-invalid' })).ok, true);
   const schema = await cina(['schema'], { CINA_CONFIG_DIR: 'deliberately-invalid' });
   assert.equal(schema.ok, true);
+  const installedSnapshot = JSON.parse(await readFile(join(installation, 'node_modules', '@cinagroup', 'cli', 'docs', 'schema.json'), 'utf8'));
+  assert.equal(installedSnapshot.cliVersion, packed.version);
+  assert.equal(installedSnapshot.contractVersion, schema.contractVersion);
+  assert.equal(installedSnapshot.schemaVersion, schema.data.schemaVersion);
+  assert.deepEqual(installedSnapshot.commands, schema.data.commands.toSorted((a, b) => a.command.localeCompare(b.command, 'en')));
+  assert.deepEqual(installedSnapshot.errors, schema.data.errors);
   assert.equal((await cina(['context', 'create', 'staging'])).ok, true);
   assert.equal((await cina(['context', 'use', 'staging'])).ok, true);
   assert.equal((await cina(['config', 'set', 'chain.chainId', '84532'])).data.context.products.chain.chainId, 84532);
@@ -117,6 +129,12 @@ try {
     cwd: installation, env: { ...env, CINACLI_TEST_INSTALLED_MODULE: pathToFileURL(join(installation, 'node_modules', '@cinagroup', 'cli', 'dist', 'cli.js')).href }, maxBuffer: 4 * 1024 * 1024,
   });
   assert.ok(oauthChecks.stdout.includes('pass 10'));
+  const archiveName = `cinagroup-cli-${manifest.version}.tgz`;
+  const sha256 = createHash('sha256').update(await readFile(archive)).digest('hex');
+  await writeFile(join(artifacts, 'SHA256SUMS'), `${sha256}  ${archiveName}\n`);
+  await writeFile(join(artifacts, 'package-manifest.json'), JSON.stringify({ name: manifest.name, version: manifest.version, archive: archiveName, sha256,
+    platform: process.platform, node: process.versions.node, commands: schema.data.commands.length, files: packed.files.map(file => file.path), installedSmoke: 'passed',
+  }, null, 2) + '\n');
   console.log(JSON.stringify({ ok: true, archive, platform: process.platform, commands: schema.data.commands.length, files: packed.files.length }));
 } finally {
   for (const ws of wsServer.clients) ws.terminate();

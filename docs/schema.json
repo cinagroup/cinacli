@@ -1,0 +1,4340 @@
+{
+  "cliVersion": "0.1.0-alpha.5",
+  "commands": [
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "saved refresh token"
+          ],
+          "scheme": "auth-oauth",
+          "scopes": [
+            "offline_access"
+          ]
+        }
+      ],
+      "command": "auth.session.refresh",
+      "contextRequirements": [
+        "selected context",
+        "auth.issuer",
+        "auth.clientId"
+      ],
+      "effect": "auth-state",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "refreshed": {
+            "const": true,
+            "type": "boolean"
+          },
+          "subject": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshed",
+          "issuer",
+          "subject",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "刷新 CinaAuth 令牌并保存轮换后的凭据"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "auth.status",
+      "contextRequirements": [
+        "selected context",
+        "auth.issuer"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "advertised": {
+            "additionalProperties": false,
+            "properties": {
+              "authorizationCode": {
+                "type": "boolean"
+              },
+              "pkceS256": {
+                "type": "boolean"
+              },
+              "publicClient": {
+                "type": "boolean"
+              },
+              "refreshToken": {
+                "type": "boolean"
+              },
+              "scopes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "authorizationCode",
+              "pkceS256",
+              "publicClient",
+              "refreshToken",
+              "scopes"
+            ],
+            "type": "object"
+          },
+          "client": {
+            "additionalProperties": false,
+            "properties": {
+              "configured": {
+                "type": "boolean"
+              },
+              "registration": {
+                "const": "not-verified",
+                "type": "string"
+              }
+            },
+            "required": [
+              "configured",
+              "registration"
+            ],
+            "type": "object"
+          },
+          "discovery": {
+            "const": "validated",
+            "type": "string"
+          },
+          "endpoints": {
+            "additionalProperties": false,
+            "properties": {
+              "authorization": {
+                "type": "string"
+              },
+              "jwks": {
+                "type": "string"
+              },
+              "revocation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "token": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "userinfo": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "authorization",
+              "token",
+              "userinfo",
+              "jwks",
+              "revocation"
+            ],
+            "type": "object"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "login": {
+            "const": "browser-pkce",
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuer",
+          "discovery",
+          "endpoints",
+          "advertised",
+          "client",
+          "login"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "读取并核对身份服务的 OIDC 元数据"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "OIDC identity only"
+          ],
+          "scheme": "auth-oauth",
+          "scopes": [
+            "openid"
+          ]
+        }
+      ],
+      "command": "auth.whoami",
+      "contextRequirements": [
+        "selected context",
+        "auth.issuer",
+        "auth.clientId"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "emailVerified": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "subject": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuer",
+          "subject",
+          "name",
+          "email",
+          "emailVerified",
+          "scopes",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "读取并核对 CinaAuth 当前用户身份"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "chain.balance",
+      "contextRequirements": [
+        "selected context",
+        "chain.endpoint",
+        "chain.chainId"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "address": {
+          "field": "address",
+          "type": "string"
+        },
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "description": "20 字节 EVM 地址；不是私钥，首版不解析 ENS",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "type": "string"
+          },
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "description": "20 字节 EVM 地址；不是私钥，首版不解析 ENS",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "type": "string"
+          },
+          "balance": {
+            "additionalProperties": false,
+            "properties": {
+              "formatted": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unit": {
+                "const": "base-unit",
+                "type": "string"
+              },
+              "value": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "unit",
+              "formatted"
+            ],
+            "type": "object"
+          },
+          "block": {
+            "additionalProperties": false,
+            "properties": {
+              "number": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              },
+              "tag": {
+                "pattern": "^0x[0-9a-f]+$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "number",
+              "tag"
+            ],
+            "type": "object"
+          },
+          "network": {
+            "additionalProperties": false,
+            "properties": {
+              "chainId": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nativeCurrency": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "decimals": {
+                        "maximum": 9007199254740991,
+                        "minimum": -9007199254740991,
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "symbol": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "symbol",
+                      "decimals"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "testnet": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chainId",
+              "name",
+              "testnet",
+              "nativeCurrency"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "network",
+          "block",
+          "address",
+          "balance"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "查询指定地址在明确区块的原生币余额"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "chain.status",
+      "contextRequirements": [
+        "selected context",
+        "chain.endpoint",
+        "chain.chainId"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "block": {
+            "additionalProperties": false,
+            "properties": {
+              "number": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              },
+              "tag": {
+                "pattern": "^0x[0-9a-f]+$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "number",
+              "tag"
+            ],
+            "type": "object"
+          },
+          "network": {
+            "additionalProperties": false,
+            "properties": {
+              "chainId": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nativeCurrency": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "decimals": {
+                        "maximum": 9007199254740991,
+                        "minimum": -9007199254740991,
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "symbol": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "symbol",
+                      "decimals"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "testnet": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "chainId",
+              "name",
+              "testnet",
+              "nativeCurrency"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "network",
+          "block"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "核对 RPC 网络并查询当前区块"
+    },
+    {
+      "arguments": [
+        "key",
+        "value"
+      ],
+      "authentication": [],
+      "command": "config.set",
+      "contextRequirements": [
+        "selected context"
+      ],
+      "effect": "local-write",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "key": {
+            "enum": [
+              "auth.issuer",
+              "auth.apiBase",
+              "auth.clientId",
+              "auth.organizationId",
+              "token.endpoint",
+              "token.workspaceId",
+              "shop.endpoint",
+              "shop.accountId",
+              "seek.endpoint",
+              "seek.workspaceId",
+              "chain.endpoint",
+              "chain.chainId"
+            ],
+            "type": "string"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          },
+          "value": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              "products": {
+                "additionalProperties": false,
+                "properties": {
+                  "auth": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "apiBase": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "clientId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "issuer": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "chain": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "chainId": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "seek": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "shop": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "accountId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "token": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "products"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "context"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "修改允许的非敏感配置字段"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "config.show",
+      "contextRequirements": [
+        "selected context"
+      ],
+      "effect": "local-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              "products": {
+                "additionalProperties": false,
+                "properties": {
+                  "auth": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "apiBase": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "clientId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "issuer": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "chain": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "chainId": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "seek": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "shop": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "accountId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "token": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "products"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "context"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "查看所选环境的非敏感配置"
+    },
+    {
+      "arguments": [
+        "name"
+      ],
+      "authentication": [],
+      "command": "context.create",
+      "contextRequirements": [],
+      "effect": "local-write",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "name": {
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              "products": {
+                "additionalProperties": false,
+                "properties": {
+                  "auth": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "apiBase": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "clientId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "issuer": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "chain": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "chainId": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "seek": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "shop": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "accountId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "token": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "products"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "context"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "创建空环境；不自动选择为当前环境"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "context.list",
+      "contextRequirements": [],
+      "effect": "local-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "anyOf": [
+              {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                  "type": "string"
+                },
+                "products": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "auth": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "apiBase": {
+                          "maxLength": 2048,
+                          "type": "string"
+                        },
+                        "clientId": {
+                          "maxLength": 256,
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                          "type": "string"
+                        },
+                        "issuer": {
+                          "maxLength": 2048,
+                          "type": "string"
+                        },
+                        "organizationId": {
+                          "maxLength": 256,
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "chain": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "chainId": {
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        },
+                        "endpoint": {
+                          "maxLength": 2048,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "seek": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "endpoint": {
+                          "maxLength": 2048,
+                          "type": "string"
+                        },
+                        "workspaceId": {
+                          "maxLength": 256,
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "shop": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 256,
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                          "type": "string"
+                        },
+                        "endpoint": {
+                          "maxLength": 2048,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "token": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "endpoint": {
+                          "maxLength": 2048,
+                          "type": "string"
+                        },
+                        "workspaceId": {
+                          "maxLength": 256,
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "name",
+                "products"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "selected": {
+            "anyOf": [
+              {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "current",
+          "selected",
+          "items"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "列出本地环境"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "context.show",
+      "contextRequirements": [
+        "selected context"
+      ],
+      "effect": "local-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              "products": {
+                "additionalProperties": false,
+                "properties": {
+                  "auth": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "apiBase": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "clientId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "issuer": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "chain": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "chainId": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "seek": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "shop": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "accountId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "token": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "products"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "context"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "查看所选环境"
+    },
+    {
+      "arguments": [
+        "name"
+      ],
+      "authentication": [],
+      "command": "context.use",
+      "contextRequirements": [],
+      "effect": "local-write",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "name": {
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+                "type": "string"
+              },
+              "products": {
+                "additionalProperties": false,
+                "properties": {
+                  "auth": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "apiBase": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "clientId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "issuer": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "organizationId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "chain": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "chainId": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "seek": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "shop": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "accountId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      },
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "token": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "endpoint": {
+                        "maxLength": 2048,
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "pattern": "^[a-zA-Z0-9._:@/-]+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "products"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "context"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "选择已存在的环境"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "doctor",
+      "contextRequirements": [],
+      "effect": "local-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "network": {
+          "field": "network",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "product": {
+          "field": "product",
+          "type": "string"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "network": {
+            "default": false,
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "product": {
+            "enum": [
+              "auth",
+              "token",
+              "shop",
+              "seek",
+              "chain"
+            ],
+            "type": "string"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "adapter": {
+                  "enum": [
+                    "implemented",
+                    "not-implemented"
+                  ],
+                  "type": "string"
+                },
+                "authorization": {
+                  "const": "unknown",
+                  "type": "string"
+                },
+                "configuration": {
+                  "enum": [
+                    "configured",
+                    "not-configured"
+                  ],
+                  "type": "string"
+                },
+                "connectivity": {
+                  "enum": [
+                    "not-checked",
+                    "reachable",
+                    "failed"
+                  ],
+                  "type": "string"
+                },
+                "product": {
+                  "enum": [
+                    "auth",
+                    "token",
+                    "shop",
+                    "seek",
+                    "chain"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "product",
+                "configuration",
+                "connectivity",
+                "adapter",
+                "authorization"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "credentialStore": {
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "attention"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "credentialStore",
+          "checks"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "检查本地配置；可选择 TCP/TLS 连通性检查"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "Auth native public client, Token key, Shop appid/appsecret, or Seek gatekeeper/session"
+          ],
+          "scheme": "selected-product-login",
+          "scopes": []
+        }
+      ],
+      "command": "login",
+      "contextRequirements": [
+        "selected context",
+        "product endpoint"
+      ],
+      "effect": "auth-state",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "credential": {
+          "field": "credential",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "no-store": {
+          "field": "noStore",
+          "type": "boolean"
+        },
+        "product": {
+          "field": "product",
+          "type": "string"
+        },
+        "secret-stdin": {
+          "field": "secretStdin",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        },
+        "token-stdin": {
+          "field": "tokenStdin",
+          "type": "boolean"
+        },
+        "vendor": {
+          "field": "vendor",
+          "type": "string"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "credential": {
+            "enum": [
+              "gateway",
+              "management"
+            ],
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "noStore": {
+            "default": false,
+            "type": "boolean"
+          },
+          "product": {
+            "default": "auth",
+            "enum": [
+              "auth",
+              "token",
+              "shop",
+              "seek",
+              "chain"
+            ],
+            "type": "string"
+          },
+          "secretStdin": {
+            "default": false,
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 180,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          },
+          "tokenStdin": {
+            "default": false,
+            "type": "boolean"
+          },
+          "vendor": {
+            "pattern": "^[a-zA-Z0-9_-]{1,128}$",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "credential": {
+            "enum": [
+              "oauth",
+              "gateway",
+              "management",
+              "out",
+              "session"
+            ],
+            "type": "string"
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "principal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "product": {
+            "enum": [
+              "auth",
+              "token",
+              "shop",
+              "seek"
+            ],
+            "type": "string"
+          },
+          "saved": {
+            "type": "boolean"
+          },
+          "source": {
+            "enum": [
+              "stdin",
+              "environment",
+              "browser"
+            ],
+            "type": "string"
+          },
+          "validated": {
+            "const": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "product",
+          "credential",
+          "validated",
+          "saved",
+          "source",
+          "expiresAt",
+          "principal"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "登录 CinaAuth 或验证并保存产品凭据"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "logout",
+      "contextRequirements": [
+        "selected context",
+        "product endpoint"
+      ],
+      "effect": "auth-state",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "credential": {
+          "field": "credential",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "product": {
+          "field": "product",
+          "type": "string"
+        },
+        "revoke": {
+          "field": "revoke",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "credential": {
+            "enum": [
+              "gateway",
+              "management"
+            ],
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "product": {
+            "default": "auth",
+            "enum": [
+              "auth",
+              "token",
+              "shop",
+              "seek",
+              "chain"
+            ],
+            "type": "string"
+          },
+          "revoke": {
+            "default": false,
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "environmentCredentialsPresent": {
+            "type": "boolean"
+          },
+          "product": {
+            "enum": [
+              "auth",
+              "token",
+              "shop",
+              "seek"
+            ],
+            "type": "string"
+          },
+          "remoteRevocation": {
+            "enum": [
+              "not-requested",
+              "not-supported",
+              "requested"
+            ],
+            "type": "string"
+          },
+          "removed": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "credential": {
+                  "enum": [
+                    "oauth",
+                    "gateway",
+                    "management",
+                    "out",
+                    "session"
+                  ],
+                  "type": "string"
+                },
+                "localCleared": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "credential",
+                "localCleared"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "product",
+          "removed",
+          "remoteRevocation",
+          "environmentCredentialsPresent"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "移除当前环境的产品凭据；Auth 可请求远程撤销"
+    },
+    {
+      "arguments": [
+        "commandId"
+      ],
+      "authentication": [],
+      "command": "schema",
+      "contextRequirements": [],
+      "effect": "local-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "commandId": {
+            "pattern": "^[a-z]+(?:\\.[a-z]+)*$",
+            "type": "string"
+          },
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "commands": {
+            "items": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "errors": {
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": "1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "commands",
+          "errors"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "离线查看已实现命令及 JSON Schema"
+    },
+    {
+      "arguments": [],
+      "authentication": [],
+      "command": "seek.status",
+      "contextRequirements": [
+        "selected context",
+        "seek.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "accessAuthentication": {
+            "const": "not-supported",
+            "type": "string"
+          },
+          "clientProtocol": {
+            "const": "capnweb/0.12.0",
+            "type": "string"
+          },
+          "passwordAuthEnabled": {
+            "type": "boolean"
+          },
+          "serverVersion": {
+            "type": "null"
+          },
+          "vendors": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "vendors",
+          "passwordAuthEnabled",
+          "clientProtocol",
+          "serverVersion",
+          "accessAuthentication"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "读取 RPC 服务配置和可用的浏览器登录方式"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "AuthenticatedApi read access"
+          ],
+          "scheme": "seek-session",
+          "scopes": []
+        }
+      ],
+      "command": "seek.whoami",
+      "contextRequirements": [
+        "selected context",
+        "seek.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "const": "user",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "查询当前 Seek 会话的服务端身份"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "AuthenticatedApi read access"
+          ],
+          "scheme": "seek-session",
+          "scopes": []
+        }
+      ],
+      "command": "seek.workspaces.list",
+      "contextRequirements": [
+        "selected context",
+        "seek.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "createdAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string"
+                },
+                "currency": {
+                  "const": "USD",
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "lastActiveAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string"
+                },
+                "owner": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "const": "user",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "type"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pinned": {
+                  "type": "boolean"
+                },
+                "role": {
+                  "enum": [
+                    "build",
+                    "use"
+                  ],
+                  "type": "string"
+                },
+                "sharingProhibited": {
+                  "type": "boolean"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "totalCost": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "createdAt",
+                "lastActiveAt",
+                "pinned",
+                "role",
+                "owner",
+                "totalCost",
+                "currency",
+                "sharingProhibited"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "列出当前 Seek 用户的非临时工作区"
+    },
+    {
+      "arguments": [
+        "orderId"
+      ],
+      "authentication": [
+        {
+          "permissions": [
+            "GET /order/{order_id}"
+          ],
+          "scheme": "shop-out",
+          "scopes": []
+        }
+      ],
+      "command": "shop.orders.get",
+      "contextRequirements": [
+        "selected context",
+        "shop.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "orderId": {
+            "pattern": "^[a-zA-Z0-9_-]{1,128}$",
+            "type": "string"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "required": [
+          "orderId"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "type": "null"
+          },
+          "id": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "paid": {
+            "type": "boolean"
+          },
+          "paidAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "payPrice": {
+            "maxLength": 128,
+            "pattern": "^\\d+(?:\\.\\d+)?$",
+            "type": "string"
+          },
+          "status": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "statusName": {
+            "type": "string"
+          },
+          "totalPrice": {
+            "maxLength": 128,
+            "pattern": "^\\d+(?:\\.\\d+)?$",
+            "type": "string"
+          },
+          "totalQuantity": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "status",
+          "statusName",
+          "paid",
+          "totalQuantity",
+          "totalPrice",
+          "payPrice",
+          "currency",
+          "createdAt",
+          "paidAt"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "按订单号读取订单详情摘要"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "GET /order/list"
+          ],
+          "scheme": "shop-out",
+          "scopes": []
+        }
+      ],
+      "command": "shop.orders.list",
+      "contextRequirements": [
+        "selected context",
+        "shop.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "limit": {
+          "field": "limit",
+          "type": "number"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "page": {
+          "field": "page",
+          "type": "number"
+        },
+        "paid": {
+          "field": "paid",
+          "type": "string"
+        },
+        "status": {
+          "field": "status",
+          "type": "number"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "page": {
+            "default": 1,
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "paid": {
+            "enum": [
+              "0",
+              "1"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "currency": {
+                  "type": "null"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "orderId": {
+                  "type": "string"
+                },
+                "paid": {
+                  "type": "boolean"
+                },
+                "paidAt": {
+                  "anyOf": [
+                    {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "payPrice": {
+                  "maxLength": 128,
+                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                  "type": "string"
+                },
+                "status": {
+                  "maximum": 9007199254740991,
+                  "minimum": -9007199254740991,
+                  "type": "integer"
+                },
+                "statusName": {
+                  "type": "string"
+                },
+                "totalPrice": {
+                  "maxLength": 128,
+                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                  "type": "string"
+                },
+                "totalQuantity": {
+                  "maximum": 9007199254740991,
+                  "minimum": -9007199254740991,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "orderId",
+                "status",
+                "statusName",
+                "paid",
+                "totalQuantity",
+                "totalPrice",
+                "payPrice",
+                "currency",
+                "createdAt",
+                "paidAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "pagination": "page",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "列出开放接口账号可读的订单摘要"
+    },
+    {
+      "arguments": [
+        "id"
+      ],
+      "authentication": [
+        {
+          "permissions": [
+            "GET /product/{id}"
+          ],
+          "scheme": "shop-out",
+          "scopes": []
+        }
+      ],
+      "command": "shop.products.get",
+      "contextRequirements": [
+        "selected context",
+        "shop.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[1-9]\\d*$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "type": "null"
+          },
+          "id": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "maxLength": 128,
+            "pattern": "^\\d+(?:\\.\\d+)?$",
+            "type": "string"
+          },
+          "stock": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "image",
+          "price",
+          "currency",
+          "stock"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "读取平台商品详情摘要"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "GET /product/list"
+          ],
+          "scheme": "shop-out",
+          "scopes": []
+        }
+      ],
+      "command": "shop.products.list",
+      "contextRequirements": [
+        "selected context",
+        "shop.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "limit": {
+          "field": "limit",
+          "type": "number"
+        },
+        "name": {
+          "field": "name",
+          "type": "string"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "page": {
+          "field": "page",
+          "type": "number"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "page": {
+            "default": 1,
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "currency": {
+                  "type": "null"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "price": {
+                  "maxLength": 128,
+                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                  "type": "string"
+                },
+                "stock": {
+                  "maximum": 9007199254740991,
+                  "minimum": -9007199254740991,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "image",
+                "price",
+                "currency",
+                "stock"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "pagination": "page",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "列出开放接口可见的在售商品"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "Valid Out API session"
+          ],
+          "scheme": "shop-out",
+          "scopes": []
+        }
+      ],
+      "command": "shop.session.refresh",
+      "contextRequirements": [
+        "selected context",
+        "shop.endpoint",
+        "saved shop-out credential"
+      ],
+      "effect": "auth-state",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "product": {
+            "const": "shop",
+            "type": "string"
+          },
+          "refreshed": {
+            "const": true,
+            "type": "boolean"
+          },
+          "saved": {
+            "const": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "product",
+          "refreshed",
+          "saved",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "显式刷新当前已保存的开放接口会话"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "Gateway API key"
+          ],
+          "scheme": "token-gateway",
+          "scopes": []
+        }
+      ],
+      "command": "token.account.show",
+      "contextRequirements": [
+        "selected context",
+        "token.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "budget": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "pattern": "^[A-Z]{3}$",
+                "type": "string"
+              },
+              "maximum": {
+                "anyOf": [
+                  {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "period": {
+                "type": "string"
+              },
+              "resetAt": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "spent": {
+                "pattern": "^\\d+(?:\\.\\d+)?$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "maximum",
+              "spent",
+              "period",
+              "resetAt",
+              "currency"
+            ],
+            "type": "object"
+          },
+          "workspaceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "budget"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "查看当前 Gateway Key 的工作区和预算"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "Gateway API key"
+          ],
+          "scheme": "token-gateway",
+          "scopes": []
+        }
+      ],
+      "command": "token.models.list",
+      "contextRequirements": [
+        "selected context",
+        "token.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "kind": {
+          "field": "kind",
+          "type": "string"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "route-groups": {
+          "field": "routeGroups",
+          "type": "string"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "省略时保留服务端 LLM 默认筛选",
+            "enum": [
+              "llm",
+              "image",
+              "audio",
+              "embedding",
+              "all"
+            ],
+            "type": "string"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "routeGroups": {
+            "description": "CSV；省略时保留服务端 default,free 默认值",
+            "maxLength": 512,
+            "pattern": "^[a-zA-Z0-9_-]+(?:,[a-zA-Z0-9_-]+)*$",
+            "type": "string"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "info": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "contextWindow": {
+                          "anyOf": [
+                            {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "displayName": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "inputModalities": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "maxTokens": {
+                          "anyOf": [
+                            {
+                              "maximum": 9007199254740991,
+                              "minimum": -9007199254740991,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "outputModalities": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "routeGroups": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "tags": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "vendor": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "displayName",
+                        "vendor",
+                        "tags",
+                        "routeGroups",
+                        "contextWindow",
+                        "maxTokens",
+                        "inputModalities",
+                        "outputModalities"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ownedBy": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "ownedBy",
+                "info"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "列出当前 Gateway Key 可发现的模型"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "Management API key account scope"
+          ],
+          "scheme": "token-management",
+          "scopes": []
+        }
+      ],
+      "command": "token.workspaces.list",
+      "contextRequirements": [
+        "selected context",
+        "token.endpoint"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "limit": {
+          "field": "limit",
+          "type": "number"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "offset": {
+          "field": "offset",
+          "type": "number"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 50,
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "offset": {
+            "default": 0,
+            "maximum": 1000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "createdAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "slug",
+                "description",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "pagination": "offset",
+      "preview": "none",
+      "retryPolicy": "idempotent-read",
+      "streaming": false,
+      "summary": "列出 Management Key 账号可访问的工作区"
+    },
+    {
+      "arguments": [],
+      "authentication": [
+        {
+          "permissions": [
+            "OIDC identity only"
+          ],
+          "scheme": "auth-oauth",
+          "scopes": [
+            "openid"
+          ]
+        }
+      ],
+      "command": "whoami",
+      "contextRequirements": [
+        "selected context",
+        "auth.issuer",
+        "auth.clientId"
+      ],
+      "effect": "business-read",
+      "flags": {
+        "context": {
+          "field": "context",
+          "type": "string"
+        },
+        "json": {
+          "field": "json",
+          "type": "boolean"
+        },
+        "no-input": {
+          "field": "noInput",
+          "type": "boolean"
+        },
+        "timeout": {
+          "field": "timeout",
+          "type": "number"
+        }
+      },
+      "idempotency": "none",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "context": {
+            "description": "命名环境；优先于 CINA_CONTEXT",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "json": {
+            "default": false,
+            "description": "stdout 输出单个 JSON 文档",
+            "type": "boolean"
+          },
+          "noInput": {
+            "default": false,
+            "description": "禁止交互和隐式登录",
+            "type": "boolean"
+          },
+          "timeout": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "maximum": 300,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "emailVerified": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "subject": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuer",
+          "subject",
+          "name",
+          "email",
+          "emailVerified",
+          "scopes",
+          "expiresAt"
+        ],
+        "type": "object"
+      },
+      "pagination": "none",
+      "preview": "none",
+      "retryPolicy": "none",
+      "streaming": false,
+      "summary": "读取并核对 CinaAuth 当前用户身份"
+    }
+  ],
+  "contractVersion": "1",
+  "errors": {
+    "AUTHENTICATION_FAILED": {
+      "exitCode": 3,
+      "message": "凭据验证失败。",
+      "retryable": false
+    },
+    "CANCELLED": {
+      "exitCode": 130,
+      "message": "操作已取消。",
+      "retryable": false
+    },
+    "CAPABILITY_UNAVAILABLE": {
+      "exitCode": 8,
+      "message": "当前能力不可用。",
+      "retryable": false
+    },
+    "CONFIG_INVALID": {
+      "exitCode": 2,
+      "message": "配置格式或字段无效。",
+      "retryable": false
+    },
+    "CONFIG_IO_ERROR": {
+      "exitCode": 2,
+      "message": "无法读写配置文件，请检查目录权限。",
+      "retryable": false
+    },
+    "CONFLICT": {
+      "exitCode": 6,
+      "message": "资源已存在或有并发操作，请重试。",
+      "retryable": false
+    },
+    "CONTEXT_NOT_FOUND": {
+      "exitCode": 2,
+      "message": "未找到所选 context，请先创建并选择环境。",
+      "retryable": false
+    },
+    "CREDENTIAL_REQUIRED": {
+      "exitCode": 3,
+      "message": "缺少当前环境所需的凭据。",
+      "retryable": false
+    },
+    "INTERNAL_ERROR": {
+      "exitCode": 1,
+      "message": "发生内部错误。",
+      "retryable": false
+    },
+    "INVALID_ARGUMENT": {
+      "exitCode": 2,
+      "message": "参数无效，请查看命令帮助。",
+      "retryable": false
+    },
+    "NETWORK_ERROR": {
+      "exitCode": 7,
+      "message": "网络请求失败。",
+      "retryable": true
+    },
+    "PERMISSION_DENIED": {
+      "exitCode": 4,
+      "message": "服务端拒绝此操作的权限。",
+      "retryable": false
+    },
+    "PRECONDITION_FAILED": {
+      "exitCode": 6,
+      "message": "执行前提尚未满足。",
+      "retryable": false
+    },
+    "RATE_LIMITED": {
+      "exitCode": 7,
+      "message": "请求受到限流。",
+      "retryable": true
+    },
+    "RESOURCE_NOT_FOUND": {
+      "exitCode": 5,
+      "message": "资源不存在。",
+      "retryable": false
+    },
+    "TIMEOUT": {
+      "exitCode": 9,
+      "message": "操作超时。",
+      "retryable": true
+    },
+    "TOKEN_EXPIRED": {
+      "exitCode": 3,
+      "message": "凭据已过期，请重新登录。",
+      "retryable": false
+    },
+    "UPSTREAM_CONTRACT_MISMATCH": {
+      "exitCode": 8,
+      "message": "上游响应不符合预期契约。",
+      "retryable": false
+    },
+    "UPSTREAM_RPC_ERROR": {
+      "exitCode": 7,
+      "message": "上游 RPC 返回执行错误。",
+      "retryable": false
+    },
+    "UPSTREAM_UNAVAILABLE": {
+      "exitCode": 7,
+      "message": "上游服务暂时不可用。",
+      "retryable": true
+    }
+  },
+  "schemaVersion": "1"
+}

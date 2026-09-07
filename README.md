@@ -8,7 +8,7 @@ Cina 产品统一命令行入口，面向开发者、运营人员、脚本和 AI
 | 仓库 | [cinagroup/cinacli](https://github.com/cinagroup/cinacli) |
 | npm 包名 | `@cinagroup/cli` |
 | 终端命令 | `cina` |
-| 规划中的产品模块 | `auth`、`token`、`shop`、`seek`、`chain` |
+| 产品模块 | `auth`、`token`、`shop`、`seek`、`chain` |
 
 ## 当前状态
 
@@ -20,6 +20,10 @@ Cina 产品统一命令行入口，面向开发者、运营人员、脚本和 AI
 
 ## 设计文档
 
+- [安装、升级与卸载](docs/installation.md)
+- [支持矩阵与真实验收条件](docs/support.md)
+- [随包 schema 快照](docs/schema.json)
+- [变更记录](CHANGELOG.md)与[版本发布流程](docs/release.md)
 - [总体架构与认证方案](docs/architecture.md)
 - [首版命令及输出契约](docs/command-contract.md)
 - [产品接口映射与待补能力](docs/product-integration.md)
@@ -74,7 +78,7 @@ pnpm test:package
 pnpm test:keyring
 ```
 
-`pnpm check` 运行类型检查、构建和契约测试。`test:package` 在临时目录离线安装实际打包产物并执行 `cina`，产物保留在 `artifacts/`。`test:keyring` 使用一次性合成凭据验证系统凭据库并删除测试记录；Linux 需要可用且已解锁的 Secret Service。
+`pnpm check` 运行类型检查、构建、契约测试与 schema 快照一致性检查。`test:package` 在临时目录离线安装实际打包产物并执行 `cina`，同时核对随包 schema；tarball、SHA256SUMS 和文件清单保留在 `artifacts/`。`test:keyring` 使用一次性合成凭据验证系统凭据库并删除测试记录；Linux 需要可用且已解锁的 Secret Service。三平台 CI 成功后，可下载对应提交的 Ubuntu 安装包 artifact，详见[安装说明](docs/installation.md)。
 
 `.github/workflows/ci.yml` 在 Windows、macOS、Linux 运行相同验证。系统凭据库不可用时明确报错，不会回退保存明文凭据。Token/Shop/Seek 可使用对应的显式环境变量；Auth 使用浏览器登录后保存的独立 OAuth 会话，访问令牌过期时需显式刷新。
 
@@ -96,13 +100,13 @@ node dist/bin.js seek workspaces list --json
 以下命令仅为设计示例，尚未实现：
 
 ```text
-cina context use staging
-cina login
-cina whoami --json
-
 cina auth users list --json
 ```
 
 首版以业务只读操作为主。登录、刷新令牌、退出登录和修改本地配置会改变认证或本地状态，其行为单独声明。用户管理、订单写入、模型生成、Agent 执行和链上签名列入后续阶段。
 
-下一步推进 Auth 浏览器登录及真实服务认证验收，见[路线图](docs/roadmap.md)。
+下一步完成真实服务认证验收及 npm 发布权限核验，见[路线图](docs/roadmap.md)。尚未发布 npm 包。
+
+## 许可证
+
+Copyright 2026 cinacli contributors. 本项目采用 [Apache License 2.0](LICENSE)；第三方依赖保留各自许可证。

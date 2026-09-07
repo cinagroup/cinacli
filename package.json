@@ -2,6 +2,7 @@
   "name": "@cinagroup/cli",
   "version": "0.1.0-alpha.5",
   "description": "Unified command-line tools for Cina products",
+  "license": "Apache-2.0",
   "type": "module",
   "bin": {
     "cina": "dist/bin.js"
@@ -9,6 +10,8 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
     "docs"
   ],
   "repository": {
@@ -23,10 +26,12 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --test test/*.test.mjs",
-    "check": "pnpm typecheck && pnpm build && pnpm test",
+    "check": "pnpm typecheck && pnpm build && pnpm test && pnpm schema:check",
+    "schema:update": "pnpm build && node scripts/schema-snapshot.mjs --write",
+    "schema:check": "node scripts/schema-snapshot.mjs --check",
     "test:package": "pnpm build && node scripts/package-smoke.mjs",
     "test:keyring": "node scripts/keyring-smoke.mjs",
-    "prepack": "pnpm build"
+    "prepack": "pnpm build && pnpm schema:check"
   },
   "dependencies": {
     "capnweb": "0.12.0",

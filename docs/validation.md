@@ -53,6 +53,8 @@ Windows 本地类型检查、构建和全部 45 项测试通过，包括错误�
 
 实际 Windows 凭据库验证发现 2400 字符单条记录写入失败，因此新增系统凭据库分块适配。包含约 4200 字符合成 access/refresh token 和 Unicode 身份的长记录，已在真实 Windows 凭据库完成写入、读取、替换和删除；没有读取用户已有凭据。分块测试验证旧记录兼容、分块写入失败、索引提交结果不确定和内容损坏。跨平台行为由该提交 CI 继续验证。
 
+提交 `f05cf905f829d5ce3143f18e953e6c99b10764f9` 的 [Windows / macOS / Ubuntu CI](https://github.com/cinagroup/cinacli/actions/runs/34100877388) 已全部通过，包含原生长凭据与实际安装包测试。
+
 2026-09-07 再次读取 `https://auth.cinaseek.ai/.well-known/openid-configuration`，HTTP 200，issuer 精确匹配、签名算法 ES256、token 端点支持 none；revocation 端点仅公布 client_secret_basic/client_secret_post/private_key_jwt。因此当前公开部署的 CLI 远程撤销不可用；没有宣称已完成生产用户登录或令牌撤销。
 
 剩余真实验收：Auth 专用 native public client 和真实浏览器授权；Token endpoint/测试 Key；Shop 部署/开放账号；Seek 支持的 gatekeeper 部署或后续 Access 终端方案。M3 发布准备及五产品联合运行验收仍未完成，未发布 npm 包。

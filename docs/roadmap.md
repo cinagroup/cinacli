@@ -2,7 +2,7 @@
 
 状态：实施中；更新日期：2026-09-07。
 
-M0 至 alpha.4 已推送且三平台 CI 通过。alpha.5 加入 Auth PKCE 登录、userinfo、显式刷新和系统凭据分块存储，本地协议测试及长凭据原生存储验证通过。Auth 公开 discovery 验证通过，真实浏览器登录待专用 public client；Token/Shop/Seek 真实认证验收待测试配置与凭据。详细证据见[验证记录](validation.md)。尚未发布 npm 包。
+M0 至 alpha.5 已推送且三平台 CI 通过。alpha.5 加入 Auth PKCE 登录、userinfo、显式刷新和系统凭据分块存储。M3 已补充安装说明、支持矩阵、schema 快照、变更记录及发布流程，CI 安装包归档继续验证。Auth 真实浏览器登录待专用 public client；Token/Shop/Seek 真实认证验收待测试配置与凭据。详细证据见[验证记录](validation.md)。尚未发布 npm 包。
 
 ## 目标
 
@@ -72,6 +72,8 @@ Auth 用户/组织管理命令不在本阶段靠现有 OIDC 身份 scope 强行�
 ## M3：v0.1 发布准备
 
 交付：安装说明、真实使用示例、支持矩阵、schema 快照、变更记录及版本发布流程。
+
+当前：文档和 schema 快照已准备；CI 将归档验证后的 tarball、摘要和文件清单。许可证已按用户选择设为 Apache-2.0 并纳入安装包。公开 npm 查询为 404、本机未登录，组织发布权限尚未核验。真实用例仅 Chain 已完成业务读取，Auth 公开 discovery 不算真实用户登录，其余产品验收仍待条件。M3 未整体完成。
 
 验收：
 
