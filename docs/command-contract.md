@@ -1,6 +1,6 @@
 # 首版命令及输出契约
 
-状态：命令契约；更新日期：2026-09-07。**M0、M1 Token/Chain 及 M2 Auth status、Shop 命令已实现；Auth 浏览器 OAuth 和 Seek 尚未实现。** 登录/退出当前支持显式 `--product token|shop`。各阶段对应[路线图](roadmap.md)中的里程碑。
+状态：命令契约；更新日期：2026-09-07。**公共框架、Token/Shop/Seek/Chain 与 Auth status 已实现；Auth 浏览器 OAuth 尚未实现。** 登录/退出当前支持显式 `--product token|shop|seek`。各阶段对应[路线图](roadmap.md)中的里程碑。
 
 ## 1. 命令范围
 
@@ -20,13 +20,15 @@
 
 `context use` 对不存在的 context 报错；`config set` 校验允许的字段和 URL，不接受任意代码或秘密字段。`doctor` 缺少某产品配置时逐项报告，不把其他已正常服务标记为失败；聚合状态区分 ready、not-configured、unsupported、unknown、failed。
 
-doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；Auth/Token/Shop/Chain adapter 为 implemented，Seek 为 not-implemented，authorization 仍为 unknown，聚合 status 为 attention。adapter 只表示该产品存在已实现命令。配置解析、超时或中断等执行失败仍返回相应非零退出码。
+doctor 分别输出 configuration、connectivity、adapter、authorization 和 credentialStore。`--network` 显式开启无凭据 TCP/TLS 检查；默认不发网络请求。诊断执行成功返回退出码 0，检查结果在 data 中表达；五产品 adapter 为 implemented，authorization 仍为 unknown，聚合 status 为 attention。adapter 只表示该产品存在已实现命令。配置解析、超时或中断等执行失败仍返回相应非零退出码。
 
 Token 登录必须指定 `--credential gateway|management`，通过环境变量或显式 `--token-stdin` 输入，验证后存入系统凭据库；`--no-store` 仅验证。Token 退出仅清理本机绑定，不远程撤销 API key。
 
 Shop 登录使用 `CINA_SHOP_APP_ID` 和 `CINA_SHOP_APP_SECRET`，或 `--secret-stdin`；只保存返回的 token、账号和到期信息。`shop session refresh` 是显式 auth-state 操作、禁止自动重试，刷新不确定错误标记 `retryable=false`。Shop 退出仅清除本机绑定，远程撤销为 not-supported。默认 `login` / `logout` 对应的 Auth 流程尚未支持，明确返回 CAPABILITY_UNAVAILABLE；未提供 `--all-products`。
 
 ### 产品只读命令
+
+Seek 登录使用已验证的 `--vendor` 浏览器流程，或通过环境变量/`--token-stdin` 导入独立会话；退出为本机清理。`--json`、`--no-input` 和无 TTY 时禁止浏览器启动。登录默认总超时 180 秒，其余命令 30 秒，均可显式调整至最多 300 秒。
 
 | 命令 | 上游能力 | 认证及限制 | 阶段 |
 | --- | --- | --- | --- |
@@ -38,6 +40,7 @@ Shop 登录使用 `CINA_SHOP_APP_ID` 和 `CINA_SHOP_APP_SECRET`，或 `--secret-
 | `cina shop orders list` / `get <id>` | `GET /outapi/order/list`、`/order/{order_id}` | 开放接口 token 与相应接口权限 | M2 |
 | `cina seek workspaces list` | `AuthenticatedApi.listGadgets()` | Seek session；隐藏临时工作区，无服务端分页 | M2 |
 | `cina seek whoami` | `AuthenticatedApi.whoami()` | Seek session；独立于 CinaAuth userinfo | M2 |
+| `cina seek status` | `PublicApi.getServerConfig()` | 无需会话；列出登录方式，不推断服务端版本 | M2 |
 | `cina chain status` | `eth_chainId`、`eth_blockNumber` | 配置的 RPC；核对 chainId | M1 |
 | `cina chain balance --address <address>` | `eth_getBalance` | 原生币余额；输出网络、区块、原始数量和单位 | M1 |
 

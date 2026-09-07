@@ -12,7 +12,7 @@ import type { Runtime } from "./core/commands.js";
 
 export const version = (JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string }).version;
 export interface CliIO { out: (text: string) => void; err: (text: string) => void; isTTY: boolean }
-export interface RunOptions { env?: Environment; io: CliIO; signal?: AbortSignal; store?: SecretStore; readSecret?: (signal: AbortSignal) => Promise<string> }
+export interface RunOptions { env?: Environment; io: CliIO; signal?: AbortSignal; store?: SecretStore; readSecret?: (signal: AbortSignal) => Promise<string>; openBrowser?: (url: string, signal: AbortSignal) => Promise<void> }
 
 /** Dependency injection keeps offline commands testable without filesystem/network/credential access. */
 export async function runCli(args: string[], options: RunOptions): Promise<number> {
@@ -44,11 +44,11 @@ export async function runCli(args: string[], options: RunOptions): Promise<numbe
       return 0;
     }
     if (!parsed.command) throw new CliError("INVALID_ARGUMENT");
-    timer = deadline(globals.data.timeout * 1000, options.signal);
+    timer = deadline((parsed.input.timeout === undefined ? parsed.command.defaultTimeoutSeconds : globals.data.timeout) * 1000, options.signal);
     const env = options.env ?? process.env;
     runtime = {
       env, directory: () => configDirectory(env), signal: timer.signal,
-      store: options.store ?? systemSecretStore(), version, context: null, meta: {}, readSecret: options.readSecret,
+      store: options.store ?? systemSecretStore(), version, context: null, meta: {}, readSecret: options.readSecret, openBrowser: options.openBrowser,
     };
     runtime.signal.throwIfAborted();
     const input = { ...parsed.input, noInput: globals.data.noInput || !options.io.isTTY || json };

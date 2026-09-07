@@ -31,4 +31,14 @@ Auth 实际只读验证：`https://auth.cinaseek.ai` 的 discovery issuer 匹配
 
 Windows 本地类型检查、构建、37 项测试及实际安装包验证通过；alpha.3 包提供 21 条命令，包含 33 个允许发布的文件。安装后的 bin 已验证 Auth discovery、Shop 读取及 secret stdin 登录，并回归 Token/Chain 命令。
 
-Shop 使用受控 loopback 服务和合成账号/token 测试，真实开放接口账号联调待完成。Auth 浏览器 OAuth 与 Seek 接入尚未完成。跨平台结果以对应提交 CI 为准。
+Shop 使用受控 loopback 服务和合成账号/token 测试，真实开放接口账号联调待完成。提交 `ad5af4dc2b948b145a677c8c9aa91cc22334df34` 的[三平台 CI](https://github.com/cinagroup/cinacli/actions/runs/34096440736) 已全部通过。
+
+## M2 Seek / 0.1.0-alpha.4
+
+新增 Seek status、whoami、workspaces list、gatekeeper 浏览器登录、已有会话导入及本机退出。固定 Cap’n Web 0.12.0 / ws 8.21.3，使用真实本地 WebSocket RPC 服务测试。
+
+Windows 本地类型检查、构建和全部 45 项测试通过，包括错误会话不覆盖已有凭据、无 TTY 不启动浏览器、登录取消释放 stub/socket/锁、非法浏览器 URL、302/403 握手拒绝、断线与超时。浏览器启动在测试中注入受控替身，未将这些测试称作实际系统浏览器授权验收。
+
+实际安装 alpha.4 产物后已验证 Seek 状态、身份、带 Date 的工作区和 stdin 导入，以及其他产品命令；包提供 24 条命令，包含 40 个允许发布的文件。跨平台执行结果以对应提交 CI 为准。
+
+公开服务证据：`wss://cinaseek.ai/api` 握手 HTTP 302，目标 origin 为 `https://cinagroup.cloudflareaccess.com`、路径 `/cdn-cgi/access/login/cinaseek.ai`。未使用任何凭据或跟随跳转；没有完成真实 Seek 会话或工作区读取。Auth 浏览器 OAuth 和产品真实认证验收仍未完成。

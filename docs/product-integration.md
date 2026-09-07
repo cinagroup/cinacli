@@ -105,7 +105,9 @@ CLI 已实现三项命令、两类 key 验证导入和本机退出。models 无�
 
 Cloudflare Access 部署需另行核验终端可使用的 Access 身份获取路径。没有有效 Access 凭据时，不能通过伪造 Origin 或跳过验证宣称支持；首版明确返回当前认证模式未接入。
 
-需补齐：Node 客户端运行兼容性、可版本化的公共 RPC 类型依赖、session 撤销/过期行为、真实浏览器登录联调。不会从前端 localStorage 提取会话，也不会把 CinaAuth access token 直接传入 authenticate。
+CLI 已固定 Cap’n Web 0.12.0 / ws 8.21.3 并维护已核验的最小 RPC 子集，接入 status、whoami、workspaces list、gatekeeper 浏览器登录、显式 session 导入及本机退出。Node 本地完整 WebSocket 协议测试包含 Date 转换、资源释放、取消和断线。
+
+实际 `wss://cinaseek.ai/api` 握手返回 302，跳转到 Cloudflare Access 登录。需补齐：真实可用部署的浏览器授权与只读验收、session 生命周期及可发布公共 RPC 类型契约。不会从前端 localStorage 提取会话，也不会把 CinaAuth access token 直接传入 authenticate。
 
 工作区 listGadgets 不需要 openGadget；后者可能兑换分享权限并建立更复杂的会话，不作为列表实现捷径。跨产品身份映射与细分工作区授权后续推进。
 

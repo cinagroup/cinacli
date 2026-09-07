@@ -13,6 +13,7 @@ export interface Runtime {
   context: { name: string; product: string | null } | null;
   meta: Record<string, unknown>;
   readSecret?: ((signal: AbortSignal) => Promise<string>) | undefined;
+  openBrowser?: ((url: string, signal: AbortSignal) => Promise<void>) | undefined;
 }
 
 export const globalShape = {
@@ -30,6 +31,7 @@ export const globalFlags = {
 export interface Flag { type: "string" | "boolean" | "number"; field: string }
 export interface Authentication { scheme: string; scopes: string[]; permissions: string[] }
 export interface Command {
+  defaultTimeoutSeconds: number;
   id: string;
   path: string[];
   summary: string;
@@ -46,14 +48,17 @@ export interface Command {
 }
 
 export function define<Shape extends z.ZodRawShape>(spec: {
+  defaultTimeoutSeconds?: number;
   id: string; summary: string; effect?: Command["effect"]; contextRequirements?: readonly string[];
   authentication?: Authentication[]; pagination?: Command["pagination"]; retryPolicy?: Command["retryPolicy"];
   shape: Shape; output: z.ZodType; positionals?: string[]; flags?: Record<string, Flag>;
   run: (input: z.infer<z.ZodObject<Shape & typeof globalShape>>, runtime: Runtime) => Promise<unknown>;
 }): Command {
-  const input = z.strictObject({ ...globalShape, ...spec.shape });
+  const defaultTimeoutSeconds = spec.defaultTimeoutSeconds ?? 30;
+  const selectedGlobals: typeof globalShape = { ...globalShape, timeout: globalShape.timeout.unwrap().default(defaultTimeoutSeconds) };
+  const input = z.strictObject({ ...selectedGlobals, ...spec.shape });
   return {
-    id: spec.id, path: spec.id.split("."), summary: spec.summary,
+    id: spec.id, path: spec.id.split("."), summary: spec.summary, defaultTimeoutSeconds,
     effect: spec.effect ?? "local-read", contextRequirements: spec.contextRequirements ?? [],
     authentication: spec.authentication ?? [], pagination: spec.pagination ?? "none", retryPolicy: spec.retryPolicy ?? "none",
     positionals: spec.positionals ?? [], flags: { ...globalFlags, ...spec.flags }, input, output: spec.output,

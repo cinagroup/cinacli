@@ -1,12 +1,23 @@
 {
   "name": "@cinagroup/cli",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Unified command-line tools for Cina products",
   "type": "module",
-  "bin": { "cina": "dist/bin.js" },
-  "files": ["dist", "README.md", "docs"],
-  "repository": { "type": "git", "url": "https://github.com/cinagroup/cinacli.git" },
-  "engines": { "node": ">=24.14.1 <25" },
+  "bin": {
+    "cina": "dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cinagroup/cinacli.git"
+  },
+  "engines": {
+    "node": ">=24.14.1 <25"
+  },
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -17,7 +28,17 @@
     "test:keyring": "node scripts/keyring-smoke.mjs",
     "prepack": "pnpm build"
   },
-  "dependencies": { "zod": "4.5.4" },
-  "optionalDependencies": { "@napi-rs/keyring": "2.0.0" },
-  "devDependencies": { "@types/node": "24.13.3", "typescript": "7.0.2" }
+  "dependencies": {
+    "capnweb": "0.12.0",
+    "ws": "8.21.3",
+    "zod": "4.5.4"
+  },
+  "optionalDependencies": {
+    "@napi-rs/keyring": "2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@types/ws": "8.18.1",
+    "typescript": "7.0.2"
+  }
 }

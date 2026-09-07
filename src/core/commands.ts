@@ -11,6 +11,7 @@ import { chainCommands } from "../products/chain/commands.js";
 import { sessionCommands } from "./sessions.js";
 import { authCommands } from "../products/auth/commands.js";
 import { shopCommands } from "../products/shop/commands.js";
+import { seekCommands } from "../products/seek/commands.js";
 export { globalShape, globalFlags } from "./command.js";
 export type { Command, Flag, Runtime } from "./command.js";
 
@@ -128,6 +129,7 @@ const commands: Command[] = [
   ...sessionCommands,
   ...authCommands,
   ...shopCommands,
+  ...seekCommands,
 ];
 
 export function commandRegistry(): readonly Command[] { return commands; }

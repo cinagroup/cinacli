@@ -59,6 +59,7 @@ test('schema lists exactly implemented commands and defines input/output/effects
   const models = result.json.data.commands.find(item => item.command === 'token.models.list');
   assert.equal(models.authentication[0].scheme, 'token-gateway');
   assert.equal(models.effect, 'business-read');
+  assert.equal(result.json.data.commands.find(item => item.command === 'login').inputSchema.properties.timeout.default, 180);
 });
 
 test('invalid arguments produce one sanitized JSON failure with exit 2', async t => {
@@ -84,8 +85,8 @@ test('invalid arguments produce one sanitized JSON failure with exit 2', async t
 
 test('unknown product commands are errors, not fabricated empty success', async t => {
   const directory = await fixture(t);
-  assert.equal((await run(directory, ['seek', 'workspaces', 'list', '--json'])).exitCode, 2);
-  const result = await run(directory, ['schema', 'seek.workspaces.list', '--json']);
+  assert.equal((await run(directory, ['auth', 'users', 'list', '--json'])).exitCode, 2);
+  const result = await run(directory, ['schema', 'auth.users.list', '--json']);
   assert.equal(result.exitCode, 8);
   assert.equal(result.json.error.code, 'CAPABILITY_UNAVAILABLE');
 });
@@ -145,11 +146,11 @@ test('invalid config and concurrent writer never overwrite the file', async t =>
   await assert.rejects(access(configPath), { code: 'ENOENT' });
 });
 
-test('doctor reports missing adapters and unavailable keyring without claiming auth or leaking errors', async t => {
+test('doctor reports available adapters and unavailable keyring without claiming auth or leaking errors', async t => {
   const result = await run(await fixture(t), ['doctor', '--product', 'seek', '--json']);
   assert.equal(result.exitCode, 0);
   assert.equal(result.json.data.status, 'attention');
   assert.equal(result.json.data.credentialStore, 'unavailable');
-  assert.deepEqual(result.json.data.checks, [{ product: 'seek', configuration: 'not-configured', connectivity: 'not-checked', adapter: 'not-implemented', authorization: 'unknown' }]);
+  assert.deepEqual(result.json.data.checks, [{ product: 'seek', configuration: 'not-configured', connectivity: 'not-checked', adapter: 'implemented', authorization: 'unknown' }]);
   assert.ok(!result.stdout.includes('private-backend-detail'));
 });

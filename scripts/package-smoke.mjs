@@ -5,6 +5,8 @@ import { mkdir, mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
+import { WebSocketServer } from 'ws';
+import { newWebSocketRpcSession, RpcTarget } from 'capnweb';
 
 const execute = promisify(execFile);
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -28,6 +30,7 @@ async function pnpm(args, overrides = {}, stdin = '') {
 }
 
 const syntheticKey = 'package-smoke-synthetic-key';
+const seekSession = `user:${syntheticKey}`;
 const rpcMethods = [];
 const server = createServer(async (req, res) => {
   if (req.url === '/.well-known/openid-configuration') {
@@ -53,6 +56,19 @@ const server = createServer(async (req, res) => {
   const result = { eth_chainId: '0x14a34', eth_blockNumber: '0x123', eth_getBalance: '0x10000000000000001' }[body.method];
   res.end(JSON.stringify({ jsonrpc: '2.0', id: body.id, result }));
 });
+const wsServer = new WebSocketServer({ noServer: true });
+class SeekAuthenticated extends RpcTarget {
+  whoami() { return { type: 'user', id: 'smoke-user', name: 'Smoke' }; }
+  listGadgets() { return [{ id: 'smoke-workspace', title: 'Smoke', created: new Date('2026-09-01T00:00:00Z'), lastActive: new Date('2026-09-07T00:00:00Z') }]; }
+}
+class SeekPublic extends RpcTarget {
+  getServerConfig() { return { authVendors: [], passwordAuthEnabled: true }; }
+  authenticate(value) { assert.equal(value, seekSession); return new SeekAuthenticated(); }
+}
+server.on('upgrade', (req, socket, head) => wsServer.handleUpgrade(req, socket, head, ws => {
+  const api = newWebSocketRpcSession(ws, new SeekPublic());
+  ws.on('close', () => api[Symbol.dispose]());
+}));
 try {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const endpoint = `http://127.0.0.1:${server.address().port}`;
@@ -92,8 +108,15 @@ try {
   const shopLogin = await cina(['login', '--product', 'shop', '--secret-stdin', '--no-store'], { CINA_SHOP_APP_ID: 'smoke-app' }, `${syntheticKey}\n`);
   assert.equal(shopLogin.data.saved, false);
   assert.equal(shopLogin.data.principal, '1');
+  await cina(['config', 'set', 'seek.endpoint', `${endpoint}/api`]);
+  assert.equal((await cina(['seek', 'status'])).data.clientProtocol, 'capnweb/0.12.0');
+  assert.equal((await cina(['seek', 'whoami'], { CINA_SEEK_SESSION_TOKEN: seekSession })).data.id, 'smoke-user');
+  assert.equal((await cina(['seek', 'workspaces', 'list'], { CINA_SEEK_SESSION_TOKEN: seekSession })).data.items[0].createdAt, '2026-09-01T00:00:00.000Z');
+  assert.equal((await cina(['login', '--product', 'seek', '--token-stdin', '--no-store'], {}, `${seekSession}\n`)).data.principal, 'smoke-user');
   console.log(JSON.stringify({ ok: true, archive, platform: process.platform, commands: schema.data.commands.length, files: packed.files.length }));
 } finally {
+  for (const ws of wsServer.clients) ws.terminate();
+  await new Promise(resolve => wsServer.close(resolve));
   server.closeAllConnections();
   await new Promise(resolve => server.close(resolve));
   // Only remove the directory created by this script, below the fixed workspace test root.
