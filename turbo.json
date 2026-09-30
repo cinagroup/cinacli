@@ -59,6 +59,13 @@
 		"check:type": {
 			"dependsOn": ["generate", "^build"]
 		},
+		"@cinagroup/cli#build": {
+			"dependsOn": [],
+			"outputs": ["dist/**"]
+		},
+		"@cinagroup/cli#check:type": {
+			"dependsOn": []
+		},
 		"//#check:lint": {
 			"dependsOn": ["cf#generate"]
 		},

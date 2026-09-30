@@ -1,0 +1,66 @@
+name: Cina CLI CI
+
+on:
+  pull_request:
+  merge_group:
+    types: [checks_requested]
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  cina:
+    if: ${{ github.repository_owner == 'cinagroup' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        env:
+          # The retained cf SDK has long paths; configure this process only.
+          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_KEY_0: core.longpaths
+          GIT_CONFIG_VALUE_0: "true"
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install frozen pnpm workspace dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          node-version: "22"
+
+      - name: Lint, type-check, and format-check Cina CLI
+        run: pnpm --filter @cinagroup/cli check
+
+      - name: Run manifest and runner contract tests
+        run: pnpm --filter @cinagroup/cli test
+
+      - name: Build independent Cina entry
+        run: pnpm --filter @cinagroup/cli build
+
+      - name: Pack and smoke-test the extracted package offline
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/cina-package"
+          npm pack ./packages/cina-cli --ignore-scripts --pack-destination "$RUNNER_TEMP/cina-package"
+          for archive in "$RUNNER_TEMP"/cina-package/*.tgz; do
+            tar -xzf "$archive" -C "$RUNNER_TEMP/cina-package"
+          done
+          node "$RUNNER_TEMP/cina-package/package/bin/cina.mjs" --help

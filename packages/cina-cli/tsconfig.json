@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"target": "ES2023",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"strict": true,
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"noUncheckedIndexedAccess": true,
+		"forceConsistentCasingInFileNames": true,
+		"types": ["node"]
+	},
+	"include": [
+		"src/**/*.mjs",
+		"bin/**/*.mjs",
+		"scripts/**/*.mjs",
+		"test/**/*.mjs"
+	],
+	"exclude": ["dist", "node_modules"]
+}

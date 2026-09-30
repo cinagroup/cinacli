@@ -1,0 +1,239 @@
+{
+	"schemaVersion": 1,
+	"project": "cinashop",
+	"root": ".",
+	"source": {
+		"repository": "https://github.com/cinagroup/cinashop",
+		"commit": "8ad553ce6aea2dd3d2a5b8c6fa60df0fb5cc6815"
+	},
+	"verification": "configured-pending-validation",
+	"notes": [
+		"Configured from the pinned main commit; native tasks have not been run by CinaCLI.",
+		"There is no root package.json. workers-ts and each view component own a package-lock.json; packageManager and engines are not declared.",
+		"Database generation, migration, data copy/plan/verify and audit scripts are excluded from this first slice because their names do not establish a local-only effect boundary.",
+		"Worker runtime tests use the existing workerd configuration and may write local caches/state. The npm postinstall patch is part of dependency preparation, not doctor or plan.",
+		"PC build includes its auth and image unit test scripts. UniApp H5, Weixin and app builds are separate local artifact capabilities; no publication or deployment task is declared."
+	],
+	"components": [
+		{
+			"component": "workers-ts",
+			"root": "workers-ts",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "workers-ts/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "workers-ts",
+					"dependencies": [],
+					"outputs": ["workers-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "npm run typecheck:unit && npm run typecheck:runtime"
+				},
+				{
+					"task": "test",
+					"capability": "test",
+					"argv": ["npm", "run", "test"],
+					"cwd": "workers-ts",
+					"dependencies": [],
+					"outputs": [
+						"workers-ts/.wrangler",
+						"workers-ts/node_modules/.vite",
+						"workers-ts/.cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "npm run test:unit && npm run test:runtime"
+				}
+			]
+		},
+		{
+			"component": "view-admin-ts",
+			"root": "view/admin-ts",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "view/admin-ts/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "view/admin-ts",
+					"dependencies": [],
+					"outputs": ["view/admin-ts/dist", "view/admin-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vue-tsc -b && vite build"
+				}
+			]
+		},
+		{
+			"component": "view-kefu-ts",
+			"root": "view/kefu-ts",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "view/kefu-ts/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "view/kefu-ts",
+					"dependencies": [],
+					"outputs": ["view/kefu-ts/dist", "view/kefu-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vue-tsc --noEmit && vite build"
+				},
+				{
+					"task": "test",
+					"capability": "test",
+					"argv": ["npm", "run", "test"],
+					"cwd": "view/kefu-ts",
+					"dependencies": [],
+					"outputs": ["view/kefu-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vitest run"
+				}
+			]
+		},
+		{
+			"component": "view-pc-ts",
+			"root": "view/pc-ts",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "view/pc-ts/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "view/pc-ts",
+					"dependencies": [],
+					"outputs": ["view/pc-ts/dist", "view/pc-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "npm run test:auth && npm run test:images && vue-tsc -b && vite build"
+				}
+			]
+		},
+		{
+			"component": "view-supplier-ts",
+			"root": "view/supplier-ts",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "view/supplier-ts/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "view/supplier-ts",
+					"dependencies": [],
+					"outputs": [
+						"view/supplier-ts/dist",
+						"view/supplier-ts/.cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vue-tsc -b && vite build"
+				}
+			]
+		},
+		{
+			"component": "view-uniapp-ts",
+			"root": "view/uniapp-ts",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "view/uniapp-ts/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "view/uniapp-ts",
+					"dependencies": [],
+					"outputs": ["view/uniapp-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vue-tsc --noEmit"
+				},
+				{
+					"task": "test-toolchain",
+					"capability": "test",
+					"argv": ["npm", "run", "test:toolchain"],
+					"cwd": "view/uniapp-ts",
+					"dependencies": [],
+					"outputs": ["view/uniapp-ts/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node --test scripts/agent-self-service-runtime.test.cjs scripts/assisted-cashier-runtime.test.cjs scripts/assisted-checkout-runtime.test.cjs scripts/assisted-selection-runtime.test.cjs scripts/assisted-records-runtime.test.cjs scripts/assisted-detail-runtime.test.cjs scripts/dev-server-security.test.cjs scripts/checkout-runtime.test.cjs scripts/cart-runtime.test.cjs scripts/wallet-runtime.test.cjs scripts/coupon-products-runtime.test.cjs scripts/product-sku-runtime.test.cjs scripts/product-detail-lifecycle.test.cjs scripts/order-detail-lifecycle.test.cjs scripts/order-list-lifecycle.test.cjs scripts/order-pay-result.test.cjs scripts/offline-cashier-runtime.test.cjs scripts/operator-writeoff-runtime.test.cjs scripts/member-code-runtime.test.cjs scripts/refund-apply-lifecycle.test.cjs scripts/refund-records-lifecycle.test.cjs scripts/seckill-runtime.test.cjs scripts/combination-runtime.test.cjs scripts/pink-status-runtime.test.cjs scripts/pink-cancellation-runtime.test.cjs scripts/bargain-runtime.test.cjs scripts/visit-history-runtime.test.cjs scripts/presale-runtime.test.cjs scripts/presale-catalog-runtime.test.cjs scripts/community-deep-links-runtime.test.cjs scripts/feedback-work-runtime.test.cjs scripts/newcomer-runtime.test.cjs scripts/product-rank-runtime.test.cjs scripts/governance-agreements-runtime.test.cjs scripts/vite-safety-package.test.cjs scripts/vite-path-security.test.cjs scripts/vite-windows-path-security.test.cjs scripts/esbuild-server-security.test.cjs scripts/vite-esbuild-compatibility.test.cjs"
+				},
+				{
+					"task": "build-h5",
+					"capability": "build",
+					"argv": ["npm", "run", "build:h5"],
+					"cwd": "view/uniapp-ts",
+					"dependencies": [],
+					"outputs": [
+						"view/uniapp-ts/dist/build/h5",
+						"view/uniapp-ts/.cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "uni build"
+				},
+				{
+					"task": "build-weixin",
+					"capability": "build",
+					"argv": ["npm", "run", "build:mp-weixin"],
+					"cwd": "view/uniapp-ts",
+					"dependencies": [],
+					"outputs": [
+						"view/uniapp-ts/dist/build/mp-weixin",
+						"view/uniapp-ts/.cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "uni build -p mp-weixin"
+				},
+				{
+					"task": "build-app",
+					"capability": "build",
+					"argv": ["npm", "run", "build:app"],
+					"cwd": "view/uniapp-ts",
+					"dependencies": [],
+					"outputs": [
+						"view/uniapp-ts/dist/build/app",
+						"view/uniapp-ts/.cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "uni build -p app"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,223 @@
+{
+	"schemaVersion": 1,
+	"project": "cinatoken",
+	"root": ".",
+	"source": {
+		"repository": "https://github.com/cinagroup/cinatoken",
+		"commit": "de5b720c2e45f02ba62c29c45791f01e2569a782"
+	},
+	"verification": "configured-pending-validation",
+	"notes": [
+		"Configured from the pinned main commit; native tasks have not been run by CinaCLI.",
+		"Use the existing npm workspace and package-lock.json. A pnpm lockfile is also tracked; do not migrate or regenerate either lockfile automatically. Root .nvmrc is 22 and packageManager is not declared.",
+		"Workers and Node/Docker are separate runtimes. Database provisioning, migrations, remote smoke checks and chain preflight are excluded.",
+		"npm lifecycle scripts are part of each declared run: core prebuild removes its own dist; unit test preludes may build local dependencies.",
+		"Proxy build is the existing Node bundle script; admin build-docker is the existing local Next standalone build. Worker deployment and Docker image publication remain separate capabilities."
+	],
+	"components": [
+		{
+			"component": "workspace",
+			"root": ".",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-versions",
+					"capability": "check",
+					"argv": ["npm", "run", "verify:package-versions"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/ci/verify-package-versions.mjs"
+				},
+				{
+					"task": "test-deploy-contracts",
+					"capability": "test",
+					"argv": ["npm", "run", "test:deploy"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/ci/run-deploy-unit-tests.mjs"
+				}
+			]
+		},
+		{
+			"component": "core",
+			"root": "packages/core",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "packages/core",
+					"dependencies": [],
+					"outputs": ["packages/core/dist", "packages/core/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "npm run build:migrate && npm run build:node-index"
+				}
+			]
+		},
+		{
+			"component": "tool-engines",
+			"root": "packages/tool-engines",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "packages/tool-engines",
+					"dependencies": [],
+					"outputs": ["packages/tool-engines/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc -p tsconfig.json --noEmit"
+				},
+				{
+					"task": "test-unit",
+					"capability": "test",
+					"argv": ["npm", "run", "test:unit"],
+					"cwd": "packages/tool-engines",
+					"dependencies": [],
+					"outputs": ["packages/tool-engines/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsx --test src/http/bounded-response.test.ts src/http/provider-post-redirect-wire.test.mjs src/web-fetch/safe-redirect-post-wire.test.mjs src/web-fetch/url-guard.test.ts"
+				}
+			]
+		},
+		{
+			"component": "proxy",
+			"root": "packages/proxy",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "packages/proxy",
+					"dependencies": ["core/build"],
+					"outputs": ["packages/proxy/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc -p tsconfig.json --noEmit"
+				},
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "packages/proxy",
+					"dependencies": ["core/build"],
+					"outputs": ["packages/proxy/dist", "packages/proxy/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node ./scripts/build.mjs"
+				}
+			]
+		},
+		{
+			"component": "admin",
+			"root": "packages/admin",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-lint",
+					"capability": "check",
+					"argv": ["npm", "run", "lint"],
+					"cwd": "packages/admin",
+					"dependencies": [],
+					"outputs": ["packages/admin/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "eslint ."
+				},
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "packages/admin",
+					"dependencies": ["core/build"],
+					"outputs": ["packages/admin/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc -p tsconfig.json --noEmit"
+				},
+				{
+					"task": "build-docker",
+					"capability": "build",
+					"argv": ["npm", "run", "build:docker"],
+					"cwd": "packages/admin",
+					"dependencies": ["core/build"],
+					"outputs": ["packages/admin/.next", "packages/admin/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "next build --webpack && node ./scripts/link-standalone-next.mjs"
+				}
+			]
+		},
+		{
+			"component": "chain-worker",
+			"root": "packages/chain-worker",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "packages/chain-worker",
+					"dependencies": ["core/build"],
+					"outputs": ["packages/chain-worker/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc -p tsconfig.json --noEmit"
+				},
+				{
+					"task": "test-unit",
+					"capability": "test",
+					"argv": ["npm", "run", "test:unit"],
+					"cwd": "packages/chain-worker",
+					"dependencies": [],
+					"outputs": ["packages/chain-worker/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsx --test src/*.test.ts && node --test scripts/*.test.mjs"
+				}
+			]
+		}
+	]
+}

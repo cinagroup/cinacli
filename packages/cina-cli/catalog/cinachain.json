@@ -1,0 +1,278 @@
+{
+	"schemaVersion": 1,
+	"project": "cinachain",
+	"root": ".",
+	"source": {
+		"repository": "https://github.com/cinagroup/cinachain",
+		"commit": "78b8a13af28f4eb21134e58194a641f5bf392e59"
+	},
+	"verification": "configured-pending-validation",
+	"notes": [
+		"Configured from main 78b8a13af28f4eb21134e58194a641f5bf392e59; native tasks have not been run by CinaCLI.",
+		"This is the Base Sepolia Beta Web3 platform: root Next DApp, portal, docs-site, Solidity contracts and six Workers; it is not a Cosmos node.",
+		"Root packageManager declares npm 11.11.0 and engines node>=22, while the tracked .nvmrc still says v18.16.0. Preserve this discrepancy for doctor; do not change toolchain or locks automatically.",
+		"The existing contracts:build script was inspected: despite its compile-and-deploy.mjs filename, it only uses solc and writes contracts/out artifacts. Deployment/broadcast scripts and workflows are separate and excluded.",
+		"Foundry default profile uses solc 0.8.24; solc-js compilation follows the existing npm lock. forge test may download a missing compiler, so its effects include network-read; compiler/dependency preparation remains separate.",
+		"Billing ENABLE_BILLING_USAGE, ENABLE_KEY_REGISTRATION, ENABLE_CUSTODIAL, ENABLE_INGRESS, ENABLE_PUBLIC_LEDGER_READS and ENABLE_INDEXER remain false. Paymaster is disabled with PAYMASTER_ENABLED=false and PAYMASTER_POLICY_MODE=disabled.",
+		"No private-key configuration, secret provisioning, RPC broadcasting, on-chain transaction, Worker deployment or production state change is declared."
+	],
+	"components": [
+		{
+			"component": "dapp",
+			"root": ".",
+			"toolchain": {
+				"name": "npm",
+				"version": "11.11.0",
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-lint",
+					"capability": "check",
+					"argv": ["npm", "run", "lint"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "eslint . --ext .ts,.tsx"
+				},
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc --noEmit --pretty false"
+				},
+				{
+					"task": "check-design-tokens",
+					"capability": "check",
+					"argv": ["npm", "run", "design:tokens:check"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/generate-design-tokens.mjs --check"
+				},
+				{
+					"task": "check-secret-contract",
+					"capability": "check",
+					"argv": ["npm", "run", "security:config"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/check-no-tracked-worker-secrets.mjs"
+				},
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": ["out", ".next", ".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "next build && node scripts/strip-nulls.mjs"
+				},
+				{
+					"task": "test",
+					"capability": "test",
+					"argv": ["npm", "run", "test"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vitest run"
+				}
+			]
+		},
+		{
+			"component": "contracts-solc",
+			"root": ".",
+			"toolchain": {
+				"name": "npm",
+				"version": "11.11.0",
+				"lockfile": "package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "contracts:build"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": ["contracts/out", ".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/compile-and-deploy.mjs"
+				}
+			]
+		},
+		{
+			"component": "contracts-foundry",
+			"root": "contracts",
+			"toolchain": {
+				"name": "forge",
+				"version": null,
+				"lockfile": null
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "test",
+					"capability": "test",
+					"argv": ["forge", "test"],
+					"cwd": "contracts",
+					"dependencies": [],
+					"outputs": ["contracts/out", "contracts/cache"],
+					"effects": ["local-write", "network-read"],
+					"timeoutMs": 120000
+				}
+			]
+		},
+		{
+			"component": "portal",
+			"root": "portal",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "portal/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "portal",
+					"dependencies": [],
+					"outputs": ["portal/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc --noEmit"
+				},
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "portal",
+					"dependencies": [],
+					"outputs": ["portal/dist", "portal/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc --noEmit && vite build"
+				}
+			]
+		},
+		{
+			"component": "docs-site",
+			"root": "docs-site",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "docs-site/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-images",
+					"capability": "check",
+					"argv": ["npm", "run", "check:images"],
+					"cwd": "docs-site",
+					"dependencies": [],
+					"outputs": ["docs-site/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/check-image-formats.mjs"
+				},
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["npm", "run", "build"],
+					"cwd": "docs-site",
+					"dependencies": [],
+					"outputs": ["docs-site/build", "docs-site/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "docusaurus build"
+				}
+			]
+		},
+		{
+			"component": "auth-proxy",
+			"root": "workers/auth-proxy",
+			"toolchain": {
+				"name": "node",
+				"version": null,
+				"lockfile": null
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "billing",
+			"root": "workers/billing",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "workers/billing/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "media-gateway",
+			"root": "workers/media-gateway",
+			"toolchain": {
+				"name": "node",
+				"version": null,
+				"lockfile": null
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "paymaster",
+			"root": "workers/paymaster",
+			"toolchain": {
+				"name": "node",
+				"version": null,
+				"lockfile": null
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "rpc-proxy",
+			"root": "workers/rpc-proxy",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": null
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "whitelist",
+			"root": "workers/whitelist",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "workers/whitelist/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		}
+	]
+}

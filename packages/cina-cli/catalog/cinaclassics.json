@@ -1,0 +1,42 @@
+{
+	"schemaVersion": 1,
+	"project": "cinaclassics",
+	"root": ".",
+	"source": {
+		"repository": "https://github.com/cinagroup/cinaclassics",
+		"commit": "6c5d4a9184f866872bf47fdb60cdcc7c81fd33c1"
+	},
+	"verification": "configured-pending-validation",
+	"notes": [
+		"The engineering package lives in Tools and uses its existing npm package-lock.",
+		"Local artifact generation, Worker API deployment and R2 publishing are distinct capabilities.",
+		"Only the existing typecheck script is declared. generate-local.ts writes local artifacts, but its asset lookup can search ancestor directories and needs a confined input root before registration.",
+		"Tools has no test or build script. Do not replace build with wrangler deploy or R2 push.",
+		"Artifact generation requires fonts, books and database inputs plus optional platform binaries; it remains separate from type checking."
+	],
+	"components": [
+		{
+			"component": "tools",
+			"root": "Tools",
+			"toolchain": {
+				"name": "npm",
+				"version": null,
+				"lockfile": "Tools/package-lock.json"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "types",
+					"capability": "check",
+					"argv": ["npm", "run", "typecheck"],
+					"cwd": "Tools",
+					"dependencies": [],
+					"outputs": ["Tools/.cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc --noEmit"
+				}
+			]
+		}
+	]
+}

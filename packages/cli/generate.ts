@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type ForgeOpenApiDocument, initFromOpenApi } from "@cloudflare/forge";
 import { filterForCliAudience } from "./generator/cli-audience.js";
+import { resolveOutputDirectory } from "./generator/output-directory.js";
 import { dropSdkMethodGroupCollisions } from "./generator/sdk-method-group-collisions.js";
 import { hasAccountOrZoneScope } from "./generator/util.js";
 import { preserveWorkersSecretUpdatePositional } from "./generator/workers-secret-cli-compat.js";
@@ -247,8 +248,10 @@ console.log(
 );
 const forge = initFromOpenApi(cliSource);
 const files = await forge.transform(transformer);
-const generatedDir = new URL("./src/commands/_generated", import.meta.url)
-	.pathname;
+const generatedDir = resolveOutputDirectory(
+	import.meta.url,
+	"./src/commands/_generated"
+);
 const written = await forge.finalize(generatedDir, files, { clean: true });
 console.log(`CLI: wrote ${written.length} files`);
 
