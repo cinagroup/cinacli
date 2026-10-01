@@ -1,0 +1,373 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://github.com/cinagroup/cinacli/blob/main/packages/cina-cli/cina.project.schema.json",
+	"title": "Cina static project manifest",
+	"description": "Static JSON only. The CLI never downloads schemas, evaluates project configuration or executes scripts during inspect, doctor or plan.",
+	"$comment": "Runtime validation additionally checks dependency graphs, unique component/task identities, component cwd boundaries, Git repository roots, real paths and symlink ancestors, native script drift and toolchain metadata. Schema validity does not prove execution success.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"schemaVersion",
+		"project",
+		"root",
+		"source",
+		"verification",
+		"notes",
+		"components"
+	],
+	"properties": {
+		"schemaVersion": { "const": 1 },
+		"project": {
+			"enum": [
+				"cinagroup",
+				"cinatoken",
+				"cinashop",
+				"cinaseek",
+				"cinachain",
+				"cinaauth",
+				"cinaclassics"
+			]
+		},
+		"root": { "$ref": "#/$defs/relativePath" },
+		"source": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["repository", "commit"],
+			"properties": {
+				"repository": {
+					"enum": [
+						"https://github.com/cinagroup/cinagroup",
+						"https://github.com/cinagroup/cinatoken",
+						"https://github.com/cinagroup/cinashop",
+						"https://github.com/cinagroup/cinaseek",
+						"https://github.com/cinagroup/cinachain",
+						"https://github.com/cinagroup/cinaauth",
+						"https://github.com/cinagroup/cinaclassics"
+					]
+				},
+				"commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+			}
+		},
+		"verification": {
+			"const": "configured-pending-validation",
+			"description": "Configuration never asserts that a native check, test, build or deployment has succeeded."
+		},
+		"notes": { "$ref": "#/$defs/strings" },
+		"components": {
+			"type": "array",
+			"minItems": 1,
+			"items": { "$ref": "#/$defs/component" }
+		}
+	},
+	"allOf": [
+		{
+			"if": { "properties": { "project": { "const": "cinagroup" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": {
+								"const": "https://github.com/cinagroup/cinagroup"
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "project": { "const": "cinatoken" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": {
+								"const": "https://github.com/cinagroup/cinatoken"
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "project": { "const": "cinashop" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": { "const": "https://github.com/cinagroup/cinashop" }
+						}
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "project": { "const": "cinaseek" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": { "const": "https://github.com/cinagroup/cinaseek" }
+						}
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "project": { "const": "cinachain" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": {
+								"const": "https://github.com/cinagroup/cinachain"
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "project": { "const": "cinaauth" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": { "const": "https://github.com/cinagroup/cinaauth" }
+						}
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "project": { "const": "cinaclassics" } } },
+			"then": {
+				"properties": {
+					"source": {
+						"properties": {
+							"repository": {
+								"const": "https://github.com/cinagroup/cinaclassics"
+							}
+						}
+					}
+				}
+			}
+		}
+	],
+	"$defs": {
+		"string": { "type": "string", "minLength": 1, "pattern": "^[^\u0000]+$" },
+		"strings": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/string" },
+			"uniqueItems": true
+		},
+		"identifier": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+		"relativePath": {
+			"type": "string",
+			"minLength": 1,
+			"pattern": "^(?!/)(?!.*[\\\\:\u0000])(?!.*(?:^|/)[.][.](?:/|$))(?!.*//)(?!.*/$).+$",
+			"description": "Portable repository-relative path using / separators; . is allowed. Runtime realpath checks also reject symlink escapes."
+		},
+		"toolchain": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["name", "version", "lockfile"],
+			"properties": {
+				"name": { "enum": ["npm", "pnpm", "node", "forge"] },
+				"version": {
+					"anyOf": [
+						{ "type": "null" },
+						{ "type": "string", "pattern": "^\\d+(\\.\\d+\\.\\d+)?$" }
+					],
+					"description": "Existing major or exact version; null records an unpinned version and never requests installation."
+				},
+				"nodeVersion": {
+					"anyOf": [
+						{ "type": "null" },
+						{ "type": "string", "pattern": "^\\d+(\\.\\d+\\.\\d+)?$" }
+					],
+					"description": "Optional current Node runtime major or exact version. Missing/null is unpinned. A mismatch blocks plan, doctor and run without downloading a runtime."
+				},
+				"lockfile": {
+					"anyOf": [{ "type": "null" }, { "$ref": "#/$defs/relativePath" }]
+				}
+			}
+		},
+		"component": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["component", "root", "toolchain", "credentialRefs", "tasks"],
+			"properties": {
+				"component": { "$ref": "#/$defs/identifier" },
+				"root": { "$ref": "#/$defs/relativePath" },
+				"toolchain": { "$ref": "#/$defs/toolchain" },
+				"credentialRefs": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": { "type": "string", "pattern": "^env:[A-Z][A-Z0-9_]*$" },
+					"description": "References only; never credential values. References are not resolved by read-only commands."
+				},
+				"tasks": { "type": "array", "items": { "$ref": "#/$defs/task" } }
+			},
+			"allOf": [
+				{
+					"if": {
+						"properties": {
+							"toolchain": { "properties": { "name": { "const": "npm" } } }
+						}
+					},
+					"then": {
+						"properties": {
+							"tasks": {
+								"items": {
+									"required": ["script"],
+									"properties": {
+										"argv": {
+											"minItems": 3,
+											"anyOf": [
+												{ "maxItems": 3 },
+												{
+													"minItems": 5,
+													"prefixItems": [{}, {}, {}, { "const": "--" }]
+												}
+											],
+											"prefixItems": [
+												{ "const": "npm" },
+												{ "const": "run" },
+												{ "type": "string", "pattern": "^[\\w:][\\w:-]*$" }
+											]
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"toolchain": { "properties": { "name": { "const": "pnpm" } } }
+						}
+					},
+					"then": {
+						"properties": {
+							"tasks": {
+								"items": {
+									"required": ["script"],
+									"properties": {
+										"argv": {
+											"minItems": 3,
+											"maxItems": 3,
+											"prefixItems": [
+												{ "const": "pnpm" },
+												{ "const": "run" },
+												{ "type": "string", "pattern": "^[\\w:][\\w:-]*$" }
+											]
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"toolchain": { "properties": { "name": { "const": "node" } } }
+						}
+					},
+					"then": {
+						"properties": {
+							"tasks": {
+								"items": {
+									"not": { "required": ["script"] },
+									"properties": {
+										"argv": { "prefixItems": [{ "const": "node" }] }
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"toolchain": { "properties": { "name": { "const": "forge" } } }
+						}
+					},
+					"then": {
+						"properties": {
+							"tasks": {
+								"items": {
+									"not": { "required": ["script"] },
+									"properties": {
+										"argv": { "prefixItems": [{ "const": "forge" }] }
+									}
+								}
+							}
+						}
+					}
+				}
+			]
+		},
+		"task": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"task",
+				"capability",
+				"argv",
+				"cwd",
+				"dependencies",
+				"outputs",
+				"effects",
+				"timeoutMs"
+			],
+			"properties": {
+				"task": { "$ref": "#/$defs/identifier" },
+				"capability": { "enum": ["check", "build", "test", "deploy"] },
+				"argv": {
+					"type": "array",
+					"minItems": 1,
+					"items": { "$ref": "#/$defs/string" },
+					"description": "Executable and arguments, never shell command text. Duplicate arguments are preserved."
+				},
+				"cwd": { "$ref": "#/$defs/relativePath" },
+				"dependencies": { "$ref": "#/$defs/strings" },
+				"outputs": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": { "$ref": "#/$defs/relativePath" }
+				},
+				"effects": {
+					"type": "array",
+					"minItems": 1,
+					"uniqueItems": true,
+					"items": {
+						"enum": [
+							"local-read",
+							"local-write",
+							"network-read",
+							"remote-write"
+						]
+					}
+				},
+				"timeoutMs": { "type": "integer", "minimum": 1, "maximum": 3600000 },
+				"script": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Exact existing package.json script command, statically compared before execution."
+				}
+			},
+			"allOf": [
+				{
+					"if": { "properties": { "outputs": { "minItems": 1 } } },
+					"then": {
+						"properties": {
+							"effects": { "contains": { "const": "local-write" } }
+						}
+					}
+				}
+			]
+		}
+	}
+}

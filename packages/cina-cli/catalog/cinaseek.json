@@ -1,0 +1,470 @@
+{
+	"schemaVersion": 1,
+	"project": "cinaseek",
+	"root": ".",
+	"source": {
+		"repository": "https://github.com/cinagroup/cinaseek",
+		"commit": "5fd9e816c5a11965c1fd11a363e593cb1a5f7f86"
+	},
+	"verification": "configured-pending-validation",
+	"notes": [
+		"Configured from the pinned main commit. On 2026-10-01 the scoped error-reporting noEmit typecheck and 23 pure Node tests passed both natively and through CinaCLI under Node 24.19.0; all other native tasks remain unverified.",
+		"Repository CI pins Node 24.19.0. The error-reporting pilot preserves the Node 22.23.3 compatibility result and uses an isolated pnpm 11.17.0 whose registry integrity matches packageManager. This scoped pilot does not validate the aggregate Vite+ task graph.",
+		"Use pnpm 11.17.0, the checked-in workspace catalog, and the existing Vite+ task/cache runner; do not replace it with recursive npm or Turbo calls.",
+		"Many build/test capabilities are Vite+ tasks in vite.config.ts rather than package.json scripts. The root native scripts preserve their dependency graph, code generation and timeout behavior.",
+		"lint:check is the isolated lint task. The full lint/types:check scripts include build and may write generated files and artifacts.",
+		"17 gatekeeper packages have wrangler.jsonc and are Workers. gatekeeper-kit and mcp-shared are libraries; Worker identification is configuration-based.",
+		"Engineering task orchestration does not change CapnWeb application RPC, connector credentials, approval queues or business authorization.",
+		"Backend/router/Worker deployment, release/R2 uploads, previews, live billing audits and provider evals are excluded. Components without declared tasks await scoped native verification."
+	],
+	"components": [
+		{
+			"component": "workspace",
+			"root": ".",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-lint",
+					"capability": "check",
+					"argv": ["pnpm", "run", "lint:check"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vp lint"
+				},
+				{
+					"task": "check-script-types",
+					"capability": "check",
+					"argv": ["pnpm", "run", "types:scripts"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [".cina-cache/npm"],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc -p scripts/tsconfig.json"
+				},
+				{
+					"task": "build",
+					"capability": "build",
+					"argv": ["pnpm", "run", "build"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [
+						"packages/typed-storage/dist",
+						"packages/workshop-backend/src/generated",
+						"packages/workshop-frontend/dist",
+						".cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "node scripts/vp/run.ts --filter=!cinaseek --cache build"
+				},
+				{
+					"task": "test",
+					"capability": "test",
+					"argv": ["pnpm", "run", "test"],
+					"cwd": ".",
+					"dependencies": [],
+					"outputs": [
+						"packages/workshop-backend/.wrangler",
+						"packages/integration-tests/.wrangler",
+						".cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "pnpm brand:check && node scripts/vp/run.ts --filter=!cinaseek --cache test"
+				}
+			]
+		},
+		{
+			"component": "app-electron",
+			"root": "packages/app-electron",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "app-mobile",
+			"root": "packages/app-mobile",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "backend-utils",
+			"root": "packages/backend-utils",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "configurator-ui",
+			"root": "packages/configurator-ui",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "error-reporting",
+			"root": "packages/error-reporting",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["pnpm", "run", "build"],
+					"cwd": "packages/error-reporting",
+					"dependencies": [],
+					"outputs": [
+						"packages/error-reporting/.cina-cache/npm",
+						"packages/error-reporting/.cina-cache/disabled-global.npmrc"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc"
+				},
+				{
+					"task": "test-unit",
+					"capability": "test",
+					"argv": ["pnpm", "run", "test:run"],
+					"cwd": "packages/error-reporting",
+					"dependencies": [],
+					"outputs": [
+						"packages/error-reporting/node_modules/.vite",
+						"packages/error-reporting/node_modules/.vite-temp",
+						"packages/error-reporting/.cina-cache/npm",
+						"packages/error-reporting/.cina-cache/disabled-global.npmrc"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vitest run"
+				}
+			]
+		},
+		{
+			"component": "gatekeeper-cloudflare",
+			"root": "packages/gatekeeper-cloudflare",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-confluence",
+			"root": "packages/gatekeeper-confluence",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-context",
+			"root": "packages/gatekeeper-context",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-email",
+			"root": "packages/gatekeeper-email",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-github",
+			"root": "packages/gatekeeper-github",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-google",
+			"root": "packages/gatekeeper-google",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-homeassistant",
+			"root": "packages/gatekeeper-homeassistant",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-kit",
+			"root": "packages/gatekeeper-kit",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-linear",
+			"root": "packages/gatekeeper-linear",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-mcp-portal",
+			"root": "packages/gatekeeper-mcp-portal",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-mcp",
+			"root": "packages/gatekeeper-mcp",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-notion",
+			"root": "packages/gatekeeper-notion",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-scheduler",
+			"root": "packages/gatekeeper-scheduler",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-slack",
+			"root": "packages/gatekeeper-slack",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-spotify",
+			"root": "packages/gatekeeper-spotify",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-supabase",
+			"root": "packages/gatekeeper-supabase",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-workers-ai",
+			"root": "packages/gatekeeper-workers-ai",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "gatekeeper-zoominfo",
+			"root": "packages/gatekeeper-zoominfo",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "integration-tests",
+			"root": "packages/integration-tests",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "mcp-shared",
+			"root": "packages/mcp-shared",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "router",
+			"root": "packages/router",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "typed-storage",
+			"root": "packages/typed-storage",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "workshop-backend",
+			"root": "packages/workshop-backend",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "workshop-evals",
+			"root": "packages/workshop-evals",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "workshop-frontend",
+			"root": "packages/workshop-frontend",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "workshop-shared",
+			"root": "packages/workshop-shared",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		},
+		{
+			"component": "scripts",
+			"root": "scripts",
+			"toolchain": {
+				"name": "pnpm",
+				"version": "11.17.0",
+				"lockfile": "pnpm-lock.yaml"
+			},
+			"credentialRefs": [],
+			"tasks": []
+		}
+	]
+}

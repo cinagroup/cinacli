@@ -30,7 +30,7 @@ concurrency:
 
 jobs:
   check:
-    if: ${{ github.repository_owner == 'cloudflare' }}
+    if: ${{ github.repository_owner == 'cloudflare' || github.repository_owner == 'cinagroup' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -43,10 +43,10 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
-          turbo-api: ${{ secrets.TURBO_API }}
-          turbo-team: ${{ secrets.TURBO_TEAM }}
-          turbo-token: ${{ secrets.TURBO_TOKEN }}
-          turbo-signature: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          turbo-api: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_API || '' }}
+          turbo-team: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_TEAM || '' }}
+          turbo-token: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_TOKEN || '' }}
+          turbo-signature: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY || '' }}
 
       # check:lint / check:type depend on `generate` via turbo; run it
       # explicitly first so check:format (which has no such dependency)
@@ -58,7 +58,7 @@ jobs:
         run: pnpm check
 
   cli:
-    if: ${{ github.repository_owner == 'cloudflare' }}
+    if: ${{ github.repository_owner == 'cloudflare' || github.repository_owner == 'cinagroup' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -71,10 +71,10 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
-          turbo-api: ${{ secrets.TURBO_API }}
-          turbo-team: ${{ secrets.TURBO_TEAM }}
-          turbo-token: ${{ secrets.TURBO_TOKEN }}
-          turbo-signature: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          turbo-api: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_API || '' }}
+          turbo-team: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_TEAM || '' }}
+          turbo-token: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_TOKEN || '' }}
+          turbo-signature: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY || '' }}
 
       # The cli tests run against source, which imports
       # src/commands/_generated/ (gitignored). Generate it first; turbo
@@ -86,7 +86,7 @@ jobs:
         run: pnpm --filter cf test
 
   wrangler-tests:
-    if: ${{ github.repository_owner == 'cloudflare' }}
+    if: ${{ github.repository_owner == 'cloudflare' || github.repository_owner == 'cinagroup' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -99,10 +99,10 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
         with:
-          turbo-api: ${{ secrets.TURBO_API }}
-          turbo-team: ${{ secrets.TURBO_TEAM }}
-          turbo-token: ${{ secrets.TURBO_TOKEN }}
-          turbo-signature: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          turbo-api: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_API || '' }}
+          turbo-team: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_TEAM || '' }}
+          turbo-token: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_TOKEN || '' }}
+          turbo-signature: ${{ github.repository_owner == 'cloudflare' && secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY || '' }}
 
       - name: Generate command surface
         run: pnpm generate

@@ -1,0 +1,38 @@
+{
+	"name": "@cinagroup/cli",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Local project inspection and native task orchestration for Cina projects",
+	"license": "MIT OR Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/cinagroup/cinacli.git",
+		"directory": "packages/cina-cli"
+	},
+	"bin": {
+		"cina": "./bin/cina.mjs"
+	},
+	"files": [
+		"bin",
+		"dist",
+		"catalog",
+		"cina.project.schema.json"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/index.mjs",
+		"./schema": "./cina.project.schema.json"
+	},
+	"scripts": {
+		"dev": "node src/dev.mjs",
+		"build": "node scripts/build.mjs",
+		"check": "npm run check:lint && npm run check:type && npm run check:format",
+		"check:lint": "oxlint --deny-warnings --type-aware src bin scripts test",
+		"check:type": "tsgo --noEmit",
+		"check:format": "oxfmt --check src bin scripts test catalog package.json tsconfig.json cina.project.schema.json",
+		"test": "node --test"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}
