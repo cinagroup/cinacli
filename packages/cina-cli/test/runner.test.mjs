@@ -132,6 +132,11 @@ await test("argv metacharacters remain literal and credential environment is rem
 			assert.equal(data.env.WRANGLER_SEND_METRICS, "false");
 			assert.equal(data.env.ASTRO_TELEMETRY_DISABLED, "1");
 			assert.equal(data.env.NPM_CONFIG_OFFLINE, "true");
+			assert.equal(
+				data.env.NPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS,
+				undefined
+			);
+			assert.equal(data.env.COREPACK_ENABLE_NETWORK, "0");
 		} finally {
 			for (const [key, value] of Object.entries(previous)) {
 				if (value === undefined) {
@@ -439,14 +444,16 @@ await test("installed pnpm metadata resolves without executing its shell shim", 
 		);
 		await writeFile(
 			join(install, process.platform === "win32" ? "pnpm.cmd" : "pnpm"),
-			"DO NOT EXECUTE; node_modules/pnpm/bin/pnpm.cjs"
+			process.platform === "win32"
+				? '"%dp0%\\node_modules\\pnpm\\bin\\pnpm.cjs" %*'
+				: 'exec node "$basedir/node_modules/pnpm/bin/pnpm.cjs" "$@"'
 		);
 		await writeFile(
 			join(root, "package.json"),
 			JSON.stringify({ scripts: { check: "node check.cjs" } })
 		);
 		const previous = process.env.PATH;
-		process.env.PATH = `${install}${delimiter}${previous ?? ""}`;
+		process.env.PATH = install;
 		try {
 			const resolved = await resolveTool({
 				name: "pnpm",
@@ -523,6 +530,488 @@ await test("Corepack/download proxies without package metadata do not resolve", 
 	});
 });
 
+/** @type {(root: string, version: string) => Promise<{root: string, entry: string, metadata: {name: string, version: string, os: string[], cpu: string[], publishConfig: {executableFiles: string[]}}}>} */
+async function nativeFixture(root, version) {
+	const filename = process.platform === "win32" ? "pnpm.exe" : "pnpm";
+	const metadata = {
+		name: `@pnpm/exe.${process.platform}-${process.arch}`,
+		version,
+		os: [process.platform],
+		cpu: [process.arch],
+		publishConfig: { executableFiles: [`./${filename}`] },
+	};
+	await mkdir(root, { recursive: true });
+	await writeFile(join(root, "package.json"), JSON.stringify(metadata));
+	const header =
+		process.platform === "win32"
+			? [0x4d, 0x5a, 0, 0]
+			: process.platform === "darwin"
+				? [0xfe, 0xed, 0xfa, 0xcf]
+				: [0x7f, 0x45, 0x4c, 0x46];
+	const entry = join(root, filename);
+	// An incomplete binary deliberately proves resolution never runs --version.
+	await writeFile(entry, Buffer.from(header));
+	return { root, entry, metadata };
+}
+
+await test("native pnpm 11/12 resolves statically and chooses an installed matching version", async () => {
+	await fixture(async (root) => {
+		const twelve = await nativeFixture(join(root, "twelve"), "12.6.0");
+		const eleven = await nativeFixture(join(root, "eleven"), "11.1.1");
+		const previous = process.env.PATH;
+		process.env.PATH = `${twelve.root}${delimiter}${eleven.root}`;
+		try {
+			for (const [version, expected] of [
+				["12.6.0", twelve],
+				["12", twelve],
+				["11.1.1", eleven],
+				["11", eleven],
+			]) {
+				const resolved = await resolveTool({
+					name: "pnpm",
+					version: /** @type {string} */ (version),
+					lockfile: "pnpm-lock.yaml",
+				});
+				assert.equal(resolved.available, true);
+				assert.equal(
+					resolved.command,
+					/** @type {typeof twelve} */ (expected).entry
+				);
+				assert.deepEqual(resolved.args, []);
+			}
+			const mismatch = await resolveTool({
+				name: "pnpm",
+				version: "11.1.2",
+				lockfile: null,
+			});
+			assert.equal(mismatch.available, false);
+			assert.equal(mismatch.command, null);
+			assert.match(mismatch.error ?? "", /found 12\.6\.0, 11\.1\.1/);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("native pnpm requires its own version/platform metadata and a native file", async () => {
+	await fixture(async (root) => {
+		const native = await nativeFixture(root, "11.1.1");
+		const previous = process.env.PATH;
+		process.env.PATH = root;
+		try {
+			for (const metadata of [
+				{ ...native.metadata, version: undefined },
+				{ ...native.metadata, name: "pnpm" },
+				{ ...native.metadata, os: ["other-os"] },
+				{ ...native.metadata, cpu: ["other-cpu"] },
+				{ ...native.metadata, publishConfig: undefined },
+			]) {
+				await writeFile(join(root, "package.json"), JSON.stringify(metadata));
+				assert.equal(
+					(await resolveTool({ name: "pnpm", version: null, lockfile: null }))
+						.available,
+					false
+				);
+			}
+			await writeFile(
+				join(root, "package.json"),
+				JSON.stringify(native.metadata)
+			);
+			await writeFile(native.entry, "#!/bin/sh\nnode downloader.mjs");
+			assert.equal(
+				(await resolveTool({ name: "pnpm", version: null, lockfile: null }))
+					.available,
+				false
+			);
+			await rm(native.entry);
+			assert.equal(
+				(await resolveTool({ name: "pnpm", version: null, lockfile: null }))
+					.available,
+				false
+			);
+			await rm(join(root, "package.json"));
+			assert.equal(
+				(await resolveTool({ name: "pnpm", version: null, lockfile: null }))
+					.available,
+				false
+			);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("native pnpm executable symlinks cannot escape their metadata package", async () => {
+	await fixture(async (root) => {
+		const native = await nativeFixture(join(root, "tool"), "11.1.1");
+		const outside = join(root, "outside");
+		await mkdir(outside);
+		await rm(native.entry);
+		await symlink(
+			outside,
+			native.entry,
+			process.platform === "win32" ? "junction" : "dir"
+		);
+		const previous = process.env.PATH;
+		process.env.PATH = native.root;
+		try {
+			assert.equal(
+				(await resolveTool({ name: "pnpm", version: "11.1.1", lockfile: null }))
+					.available,
+				false
+			);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("npm-installed pnpm .bin relative shims resolve without executing the shim", async () => {
+	await fixture(async (root) => {
+		const shims = join(root, "node_modules", ".bin");
+		const packageRoot = join(root, "node_modules", "pnpm");
+		await mkdir(shims, { recursive: true });
+		await mkdir(join(packageRoot, "bin"), { recursive: true });
+		await writeFile(
+			join(packageRoot, "package.json"),
+			JSON.stringify({
+				name: "pnpm",
+				version: "11.1.1",
+				bin: { pnpm: "bin/pnpm.cjs" },
+			})
+		);
+		await writeFile(
+			join(packageRoot, "bin", "pnpm.cjs"),
+			"console.log(JSON.stringify(process.argv.slice(2)))"
+		);
+		const shim = join(
+			shims,
+			process.platform === "win32" ? "pnpm.cmd" : "pnpm"
+		);
+		await writeFile(
+			shim,
+			process.platform === "win32"
+				? 'DO NOT EXECUTE\n"%dp0%\\..\\pnpm\\bin\\pnpm.cjs" %*'
+				: 'DO NOT EXECUTE\nexec node "$basedir/../pnpm/bin/pnpm.cjs" "$@"'
+		);
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ scripts: { check: "node check.cjs" } })
+		);
+		const previous = process.env.PATH;
+		process.env.PATH = shims;
+		try {
+			const toolchain = {
+				name: /** @type {const} */ ("pnpm"),
+				version: "11.1.1",
+				lockfile: null,
+			};
+			const resolved = await resolveTool(toolchain);
+			assert.equal(resolved.available, true);
+			assert.equal(resolved.version, "11.1.1");
+			assert.deepEqual(resolved.args, [join(packageRoot, "bin", "pnpm.cjs")]);
+			let output = "";
+			const result = await runPlan(
+				{
+					project: "fixture",
+					repoRoot: root,
+					tasks: [
+						task(root, "shim", "", {
+							argv: ["pnpm", "run", "check", "--", "literal & space"],
+							toolchain,
+							effects: ["local-write"],
+						}),
+					],
+				},
+				{
+					allowLocalWrite: true,
+					onOutput: (_task, _stream, chunk) => {
+						output += chunk;
+					},
+				}
+			);
+			assert.equal(result.status, "success");
+			assert.deepEqual(JSON.parse(output), [
+				"run",
+				"check",
+				"--",
+				"literal & space",
+			]);
+			await writeFile(shim, "node arbitrary-downloader.cjs");
+			assert.equal((await resolveTool(toolchain)).available, false);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("pnpm native wrappers use installed matching platform metadata and never download", async () => {
+	await fixture(async (root) => {
+		const shims = join(root, "node_modules", ".bin");
+		const packageRoot = join(root, "node_modules", "pnpm");
+		const nativeRoot = join(
+			root,
+			"node_modules",
+			"@pnpm",
+			`exe.${process.platform}-${process.arch}`
+		);
+		await mkdir(shims, { recursive: true });
+		await mkdir(packageRoot, { recursive: true });
+		const native = await nativeFixture(nativeRoot, "12.6.0");
+		await writeFile(
+			join(packageRoot, "package.json"),
+			JSON.stringify({
+				name: "pnpm",
+				version: "12.6.0",
+				bin: { pnpm: "pnpm" },
+				optionalDependencies: { [native.metadata.name]: "12.6.0" },
+			})
+		);
+		await writeFile(join(packageRoot, "pnpm"), "DO NOT EXECUTE OR DOWNLOAD");
+		await writeFile(
+			join(shims, process.platform === "win32" ? "pnpm.cmd" : "pnpm"),
+			process.platform === "win32"
+				? '"%dp0%\\..\\pnpm\\pnpm" %*'
+				: '"$basedir/../pnpm/pnpm" "$@"'
+		);
+		const previous = process.env.PATH;
+		process.env.PATH = shims;
+		try {
+			const toolchain = {
+				name: /** @type {const} */ ("pnpm"),
+				version: "12.6.0",
+				lockfile: null,
+			};
+			const resolved = await resolveTool(toolchain);
+			assert.equal(resolved.available, true);
+			assert.equal(resolved.command, native.entry);
+			assert.deepEqual(resolved.args, []);
+			await writeFile(
+				join(nativeRoot, "package.json"),
+				JSON.stringify({ ...native.metadata, version: "11.1.1" })
+			);
+			assert.equal((await resolveTool(toolchain)).available, false);
+			await rm(nativeRoot, { recursive: true, force: true });
+			assert.equal((await resolveTool(toolchain)).available, false);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("pnpm 11 scoped exe shims resolve legacy platform packages with files metadata", async () => {
+	await fixture(async (root) => {
+		const shims = join(root, "node_modules", ".bin");
+		const wrapper = join(root, "node_modules", "@pnpm", "exe");
+		const osName =
+			process.platform === "win32"
+				? "win"
+				: process.platform === "darwin"
+					? "macos"
+					: process.platform;
+		const arch =
+			process.platform === "win32" && process.arch === "ia32"
+				? "x86"
+				: process.arch;
+		const name = `@pnpm/${osName}-${arch}`;
+		const native = await nativeFixture(
+			join(root, "node_modules", ...name.split("/")),
+			"11.1.1"
+		);
+		const filename = process.platform === "win32" ? "pnpm.exe" : "pnpm";
+		await writeFile(
+			join(native.root, "package.json"),
+			JSON.stringify({
+				name,
+				version: "11.1.1",
+				os: [process.platform],
+				cpu: [process.arch],
+				files: [filename],
+			})
+		);
+		await mkdir(join(native.root, "dist"), { recursive: true });
+		await writeFile(
+			join(native.root, "dist", "pnpm.mjs"),
+			"// Runtime fixture is never executed during static resolution."
+		);
+		await mkdir(shims, { recursive: true });
+		await mkdir(wrapper, { recursive: true });
+		await writeFile(
+			join(wrapper, "package.json"),
+			JSON.stringify({
+				name: "@pnpm/exe",
+				version: "11.1.1",
+				bin: { pnpm: "pnpm" },
+				optionalDependencies: { [name]: "11.1.1" },
+			})
+		);
+		await writeFile(
+			join(wrapper, "pnpm"),
+			"This file intentionally left blank"
+		);
+		await writeFile(
+			join(shims, process.platform === "win32" ? "pnpm.cmd" : "pnpm"),
+			process.platform === "win32"
+				? '"%dp0%\\..\\@pnpm\\exe\\pnpm" %*'
+				: '"$basedir/../@pnpm/exe/pnpm" "$@"'
+		);
+		const previous = process.env.PATH;
+		try {
+			for (const path of [shims, native.root]) {
+				process.env.PATH = path;
+				const resolved = await resolveTool({
+					name: "pnpm",
+					version: "11.1.1",
+					lockfile: null,
+				});
+				assert.equal(resolved.available, true);
+				assert.equal(resolved.command, native.entry);
+				assert.deepEqual(resolved.args, []);
+			}
+			await rm(join(native.root, "dist", "pnpm.mjs"));
+			assert.equal(
+				(await resolveTool({ name: "pnpm", version: "11.1.1", lockfile: null }))
+					.available,
+				false
+			);
+			await symlink(
+				root,
+				join(native.root, "dist", "pnpm.mjs"),
+				process.platform === "win32" ? "junction" : "dir"
+			);
+			assert.equal(
+				(await resolveTool({ name: "pnpm", version: "11.1.1", lockfile: null }))
+					.available,
+				false
+			);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("pnpm 11 module entry requires matching package metadata and an internal bundle", async () => {
+	await fixture(async (root) => {
+		const shims = join(root, "node_modules", ".bin");
+		const packageRoot = join(root, "node_modules", "pnpm");
+		await mkdir(shims, { recursive: true });
+		await mkdir(join(packageRoot, "bin"), { recursive: true });
+		await mkdir(join(packageRoot, "dist"), { recursive: true });
+		const metadata = {
+			name: "pnpm",
+			version: "11.1.1",
+			type: "module",
+			main: "bin/pnpm.mjs",
+			bin: { pnpm: "bin/pnpm.mjs" },
+		};
+		await writeFile(
+			join(packageRoot, "package.json"),
+			JSON.stringify(metadata)
+		);
+		const entry = join(packageRoot, "bin", "pnpm.mjs");
+		const bundle = join(packageRoot, "dist", "pnpm.mjs");
+		await writeFile(entry, "await import('../dist/pnpm.mjs')");
+		await writeFile(
+			bundle,
+			"console.log(JSON.stringify(process.argv.slice(2)))"
+		);
+		await writeFile(
+			join(shims, process.platform === "win32" ? "pnpm.cmd" : "pnpm"),
+			process.platform === "win32"
+				? '"%dp0%\\..\\pnpm\\bin\\pnpm.mjs" %*'
+				: 'exec node "$basedir/../pnpm/bin/pnpm.mjs" "$@"'
+		);
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ scripts: { check: "node check.mjs" } })
+		);
+		const previous = process.env.PATH;
+		process.env.PATH = shims;
+		try {
+			const toolchain = {
+				name: /** @type {const} */ ("pnpm"),
+				version: "11.1.1",
+				lockfile: null,
+			};
+			const resolved = await resolveTool(toolchain);
+			assert.equal(resolved.available, true);
+			assert.deepEqual(resolved.args, [entry]);
+			let output = "";
+			const result = await runPlan(
+				{
+					project: "fixture",
+					repoRoot: root,
+					tasks: [
+						task(root, "module", "", {
+							argv: ["pnpm", "run", "check"],
+							toolchain,
+							effects: ["local-write"],
+						}),
+					],
+				},
+				{
+					allowLocalWrite: true,
+					onOutput: (_task, _stream, chunk) => {
+						output += chunk;
+					},
+				}
+			);
+			assert.equal(result.status, "success");
+			assert.deepEqual(JSON.parse(output), ["run", "check"]);
+			await writeFile(
+				join(packageRoot, "package.json"),
+				JSON.stringify({ ...metadata, version: "12.6.0" })
+			);
+			assert.equal(
+				(await resolveTool({ ...toolchain, version: "12.6.0" })).available,
+				false
+			);
+			await writeFile(
+				join(packageRoot, "package.json"),
+				JSON.stringify(metadata)
+			);
+			await rm(bundle);
+			assert.equal((await resolveTool(toolchain)).available, false);
+			await symlink(
+				join(root, "node_modules"),
+				join(packageRoot, "dist", "pnpm.mjs"),
+				process.platform === "win32" ? "junction" : "dir"
+			);
+			assert.equal((await resolveTool(toolchain)).available, false);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
 await test("installed npm runs a local script without the Windows command shim", async (context) => {
 	const toolchain = {
 		name: /** @type {const} */ ("npm"),
@@ -564,6 +1053,10 @@ await test("installed npm runs a local script without the Windows command shim",
 		);
 		assert.equal(result.status, "success", output);
 		assert.match(output, /cina-npm-fixture-ok/);
+		assert.doesNotMatch(
+			output,
+			/Unknown env config.*manage-package-manager-versions/
+		);
 		await writeFile(
 			join(root, "package.json"),
 			JSON.stringify({
@@ -612,6 +1105,76 @@ await test("installed npm runs a local script without the Windows command shim",
 			escaped.error ?? "",
 			/explicit installed package-manager run script/
 		);
+	});
+});
+
+await test("npm stock prefix shim maps its percent-tilde-dp0 parameter without running prefix discovery", async () => {
+	await fixture(async (root) => {
+		const packageRoot = join(root, "node_modules", "npm");
+		await mkdir(join(packageRoot, "bin"), { recursive: true });
+		await writeFile(
+			join(packageRoot, "package.json"),
+			JSON.stringify({
+				name: "npm",
+				version: "999.1.1",
+				bin: { npm: "bin/npm-cli.js" },
+			})
+		);
+		const entry = join(packageRoot, "bin", "npm-cli.js");
+		await writeFile(
+			entry,
+			"console.log(JSON.stringify(process.argv.slice(2)))"
+		);
+		await writeFile(
+			join(root, process.platform === "win32" ? "npm.cmd" : "npm"),
+			process.platform === "win32"
+				? 'SET "NPM_CLI_JS=%~dp0\\node_modules\\npm\\bin\\npm-cli.js"\nFOR /F %%F IN (\'CALL unreviewed-prefix\') DO SET NPM_PREFIX=%%F\n"%NODE_EXE%" "%NPM_CLI_JS%" %*'
+				: 'exec node "$basedir/node_modules/npm/bin/npm-cli.js" "$@"'
+		);
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ scripts: { check: "node check.cjs" } })
+		);
+		const previous = process.env.PATH;
+		process.env.PATH = root;
+		try {
+			const toolchain = {
+				name: /** @type {const} */ ("npm"),
+				version: "999.1.1",
+				lockfile: null,
+			};
+			const resolved = await resolveTool(toolchain);
+			assert.equal(resolved.available, true);
+			assert.deepEqual(resolved.args, [entry]);
+			let output = "";
+			const result = await runPlan(
+				{
+					project: "fixture",
+					repoRoot: root,
+					tasks: [
+						task(root, "stock", "", {
+							argv: ["npm", "run", "check"],
+							toolchain,
+							effects: ["local-write"],
+						}),
+					],
+				},
+				{
+					allowLocalWrite: true,
+					onOutput: (_task, _stream, chunk) => {
+						output += chunk;
+					},
+				}
+			);
+			assert.equal(result.status, "success");
+			assert.deepEqual(JSON.parse(output), ["run", "check"]);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
 	});
 });
 

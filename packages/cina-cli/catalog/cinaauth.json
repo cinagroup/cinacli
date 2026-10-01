@@ -8,9 +8,9 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
-		"Configured from the pinned main commit; native tasks have not been run by CinaCLI.",
+		"Configured from the pinned main commit. On 2026-10-01 the scoped auth-proxy suite passed 1 file and 5 tests both natively and through CinaCLI; all other native tasks remain pending validation.",
 		"Use pnpm 11.1.1 and the existing Turbo graph and pnpm-lock.yaml. Root .nvmrc is 24. Nested demo workspaces keep their own locks and are deferred.",
-		"AGENTS.md forbids the all-workspace pnpm test command. No aggregate test capability is declared; focused Vitest suites need a separately reviewed task.",
+		"AGENTS.md forbids the all-workspace pnpm test command. Only the separately reviewed auth-proxy focused suite is declared; no aggregate test capability is declared.",
 		"Package builds retain the existing Turbo graph and native package scope. This first manifest omits aggregate build until all transitive tasks are reviewed; applications, Workers, docs and e2e packages await scoped native task verification.",
 		"Docs build has a sync-typesense postbuild and is excluded from the local build capability. Consumer typechecks can run git clean and are also excluded.",
 		"Workers dry-run builds still build local artifacts. Live acceptance, remote checks, resource configuration, secret provisioning and deployment are excluded.",
@@ -44,7 +44,35 @@
 					"argv": ["pnpm", "run", "typecheck"],
 					"cwd": ".",
 					"dependencies": [],
-					"outputs": [".cina-cache/npm"],
+					"outputs": [
+						".cina-cache/npm",
+						"node_modules/.cache/ts",
+						"packages/api-key/node_modules/.cache/ts",
+						"packages/cinaauth/node_modules/.cache/ts",
+						"packages/cli/node_modules/.cache/ts",
+						"packages/cimd/node_modules/.cache/ts",
+						"packages/core/node_modules/.cache/ts",
+						"packages/electron/node_modules/.cache/ts",
+						"packages/expo/node_modules/.cache/ts",
+						"packages/i18n/node_modules/.cache/ts",
+						"packages/passkey/node_modules/.cache/ts",
+						"packages/sso/node_modules/.cache/ts",
+						"packages/stripe/node_modules/.cache/ts",
+						"packages/telemetry/node_modules/.cache/ts",
+						"packages/prisma-adapter/node_modules/.cache/ts",
+						"packages/mongo-adapter/node_modules/.cache/ts",
+						"packages/memory-adapter/node_modules/.cache/ts",
+						"packages/drizzle-adapter/node_modules/.cache/ts",
+						"packages/kysely-adapter/node_modules/.cache/ts",
+						"packages/mcp/node_modules/.cache/ts",
+						"packages/test-utils/node_modules/.cache/ts",
+						"packages/oauth-provider/node_modules/.cache/ts",
+						"packages/redis-storage/node_modules/.cache/ts",
+						"packages/release-tooling/node_modules/.cache/ts",
+						"packages/scim/node_modules/.cache/ts",
+						"e2e/adapter/node_modules/.cache/ts",
+						"test/node_modules/.cache/ts"
+					],
 					"effects": ["local-write"],
 					"timeoutMs": 120000,
 					"script": "tsc --build --force"
@@ -159,7 +187,23 @@
 				"lockfile": "pnpm-lock.yaml"
 			},
 			"credentialRefs": [],
-			"tasks": []
+			"tasks": [
+				{
+					"task": "test-unit",
+					"capability": "test",
+					"argv": ["pnpm", "run", "test"],
+					"cwd": "packages/auth-proxy",
+					"dependencies": [],
+					"outputs": [
+						"packages/auth-proxy/.cina-cache/npm",
+						"packages/auth-proxy/node_modules/.vite",
+						"packages/auth-proxy/node_modules/.vite-temp"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vitest run"
+				}
+			]
 		},
 		{
 			"component": "packages-auth-web-contract",

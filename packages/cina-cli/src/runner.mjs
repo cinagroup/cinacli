@@ -1,13 +1,29 @@
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
-import { access, lstat, readFile, realpath } from "node:fs/promises";
+import {
+	access,
+	lstat,
+	open,
+	readFile,
+	realpath,
+	stat,
+} from "node:fs/promises";
 import { devNull } from "node:os";
-import { dirname, delimiter, isAbsolute, join, relative, sep } from "node:path";
+import {
+	basename,
+	dirname,
+	delimiter,
+	isAbsolute,
+	join,
+	relative,
+	sep,
+} from "node:path";
 
 /** @typedef {{name: "node" | "npm" | "pnpm" | "forge", version: string | null, lockfile: string | null}} Toolchain */
 /** @typedef {{id: string, component: string, capability: string, argv: string[], cwd: string, dependencies: string[], outputs: string[], effects: string[], timeoutMs: number, toolchain: Toolchain, script?: string}} Task */
 /** @typedef {{project: string, repoRoot: string, tasks: Task[]}} Plan */
 /** @typedef {{available: boolean, name: string, version: string | null, command: string | null, args: string[], error?: string}} ToolResolution */
+/** @typedef {{version: string, command: string, args: string[]}} InstalledTool */
 /** @typedef {{id: string, status: string, exitCode: number | null, durationMs: number, signal?: string | null, error?: string}} TaskResult */
 /** @typedef {{status: string, exitCode: number, tasks: TaskResult[], error?: string}} RunResult */
 /** @typedef {{allowLocalWrite?: boolean, signal?: AbortSignal, onOutput?: (task: string, stream: "stdout" | "stderr", chunk: string) => void}} RunOptions */
@@ -50,6 +66,220 @@ async function exists(path) {
 	}
 }
 
+/** @type {(metadata: unknown) => metadata is {name: string, version: string, bin?: string | Record<string, string>, main?: string, type?: string, files?: string[], os?: string[], cpu?: string[], optionalDependencies?: Record<string, string>, publishConfig?: {executableFiles?: string[]}}} */
+function packageMetadata(metadata) {
+	return (
+		metadata !== null &&
+		typeof metadata === "object" &&
+		"name" in metadata &&
+		typeof metadata.name === "string" &&
+		"version" in metadata &&
+		typeof metadata.version === "string" &&
+		/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(metadata.version)
+	);
+}
+
+/** Inspect a native header without executing a wrapper or loading its code. @type {(entry: string) => Promise<boolean>} */
+async function nativeHeader(entry) {
+	const file = await open(entry, "r");
+	try {
+		const header = Buffer.alloc(4);
+		const { bytesRead } = await file.read(header, 0, header.length, 0);
+		if (bytesRead !== header.length) {
+			return false;
+		}
+		if (process.platform === "win32") {
+			return header[0] === 0x4d && header[1] === 0x5a;
+		}
+		if (process.platform === "darwin") {
+			return [
+				0xfeedface, 0xfeedfacf, 0xcefaedfe, 0xcffaedfe, 0xcafebabe, 0xbebafeca,
+			].includes(header.readUInt32BE());
+		}
+		return header.equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46]));
+	} finally {
+		await file.close();
+	}
+}
+
+/** @type {(root: string) => Promise<InstalledTool | null>} */
+async function nativePnpm(root) {
+	const metadata = JSON.parse(
+		await readFile(join(root, "package.json"), "utf8")
+	);
+	if (
+		!packageMetadata(metadata) ||
+		!nativePnpmNames().includes(metadata.name) ||
+		!Array.isArray(metadata.os) ||
+		!metadata.os.includes(process.platform) ||
+		!Array.isArray(metadata.cpu) ||
+		!metadata.cpu.includes(process.arch)
+	) {
+		return null;
+	}
+	const filename = process.platform === "win32" ? "pnpm.exe" : "pnpm";
+	const declared = metadata.name.startsWith("@pnpm/exe.")
+		? Array.isArray(metadata.publishConfig?.executableFiles) &&
+			metadata.publishConfig.executableFiles.includes(`./${filename}`)
+		: Array.isArray(metadata.files) && metadata.files.includes(filename);
+	if (!declared) {
+		return null;
+	}
+	const packageRoot = await realpath(root);
+	const entry = await realpath(join(packageRoot, filename));
+	// pnpm 11's SEA executable is a loader for its sibling JS runtime.
+	// ignore-scripts installations can contain the binary without that payload.
+	if (!metadata.name.startsWith("@pnpm/exe.")) {
+		const bundle = await realpath(join(packageRoot, "dist", "pnpm.mjs"));
+		if (!within(packageRoot, bundle) || !(await stat(bundle)).isFile()) {
+			return null;
+		}
+	}
+	if (
+		!within(packageRoot, entry) ||
+		!(await stat(entry)).isFile() ||
+		!(await nativeHeader(entry))
+	) {
+		return null;
+	}
+	return { version: metadata.version, command: entry, args: [] };
+}
+
+/** Package names verified from the installed pnpm 11 and 12 platform maps. @type {() => string[]} */
+function nativePnpmNames() {
+	const name = `@pnpm/exe.${process.platform}-${process.arch}`;
+	const legacyOs =
+		process.platform === "win32"
+			? "win"
+			: process.platform === "darwin"
+				? "macos"
+				: process.platform;
+	const legacyArch =
+		process.platform === "win32" && process.arch === "ia32"
+			? "x86"
+			: process.arch;
+	return [
+		name,
+		`@pnpm/${legacyOs}-${legacyArch}`,
+		...(process.platform === "linux"
+			? [`${name}-musl`, `@pnpm/linuxstatic-${process.arch}`]
+			: []),
+	];
+}
+
+/** Recognize installed shim targets; never evaluate arbitrary shim code. @type {(shim: string, entry: string) => Promise<boolean>} */
+async function shimPointsTo(shim, entry) {
+	if ((await realpath(shim)) === entry) {
+		return true;
+	}
+	if ((await stat(shim)).size > 65536) {
+		return false;
+	}
+	let content = (await readFile(shim, "utf8")).replaceAll("\\", "/");
+	let offset = relative(dirname(shim), entry).split(sep).join("/");
+	if (process.platform === "win32") {
+		content = content.toLowerCase();
+		offset = offset.toLowerCase();
+	}
+	return ["%dp0%", "%~dp0", "%~dp0%", "$basedir", "${basedir}"].some((prefix) =>
+		content.includes(`${prefix}/${offset}`)
+	);
+}
+
+/** @type {(root: string, tool: string, shim: string) => Promise<InstalledTool | null>} */
+async function installedManager(root, tool, shim) {
+	const metadata = JSON.parse(
+		await readFile(join(root, "package.json"), "utf8")
+	);
+	if (!packageMetadata(metadata)) {
+		return null;
+	}
+	if (tool === "pnpm" && nativePnpmNames().includes(metadata.name)) {
+		const native = await nativePnpm(root);
+		return native && (await shimPointsTo(shim, native.command)) ? native : null;
+	}
+	if (
+		metadata.name !== tool &&
+		!(tool === "pnpm" && metadata.name === "@pnpm/exe")
+	) {
+		return null;
+	}
+	const bin =
+		typeof metadata.bin === "string" ? metadata.bin : metadata.bin?.[tool];
+	if (typeof bin !== "string") {
+		return null;
+	}
+	const packageRoot = await realpath(root);
+	const entry = await realpath(join(packageRoot, bin));
+	if (
+		!within(packageRoot, entry) ||
+		!(await stat(entry)).isFile() ||
+		!(await shimPointsTo(shim, entry))
+	) {
+		return null;
+	}
+	const legacyEntry = tool === "npm" ? "bin/npm-cli.js" : "bin/pnpm.cjs";
+	if (bin.replaceAll("\\", "/").replace(/^\.\//, "") === legacyEntry) {
+		return {
+			version: metadata.version,
+			command: await realpath(process.execPath),
+			args: [entry],
+		};
+	}
+	// The installed pnpm 11 JS entry only checks Node and imports its bundle;
+	// pnpm 12's Corepack entry can download and is never selected here.
+	if (
+		tool === "pnpm" &&
+		metadata.name === "pnpm" &&
+		metadata.version.startsWith("11.") &&
+		bin === "bin/pnpm.mjs" &&
+		metadata.main === bin &&
+		metadata.type === "module"
+	) {
+		const bundle = await realpath(join(packageRoot, "dist", "pnpm.mjs"));
+		if (!within(packageRoot, bundle) || !(await stat(bundle)).isFile()) {
+			return null;
+		}
+		return {
+			version: metadata.version,
+			command: await realpath(process.execPath),
+			args: [entry],
+		};
+	}
+	if (tool !== "pnpm") {
+		return null;
+	}
+	// pnpm 11/12 wrappers may download. Resolve only their already-installed
+	// platform dependency, with matching metadata, and execute the binary itself.
+	/** @type {InstalledTool[]} */ const candidates = [];
+	for (const packageName of nativePnpmNames()) {
+		if (metadata.optionalDependencies?.[packageName] !== metadata.version) {
+			continue;
+		}
+		for (const modules of [
+			join(packageRoot, "node_modules"),
+			metadata.name.startsWith("@")
+				? dirname(dirname(packageRoot))
+				: dirname(packageRoot),
+		]) {
+			try {
+				const native = await nativePnpm(
+					join(modules, ...packageName.split("/"))
+				);
+				if (
+					native?.version === metadata.version &&
+					!candidates.some((candidate) => candidate.command === native.command)
+				) {
+					candidates.push(native);
+				}
+			} catch {
+				/* Missing or invalid installed dependencies cannot trigger a download. */
+			}
+		}
+	}
+	return candidates.length === 1 ? (candidates[0] ?? null) : null;
+}
+
 /**
  * Resolve installed tools by reading metadata only. Corepack proxies are not
  * executed: they can download a package manager. Native binaries without
@@ -77,9 +307,17 @@ export async function resolveTool(toolchain) {
 					...(process.env.PATH ?? "").split(delimiter).filter(isAbsolute),
 				]),
 			];
+			const found = new Set();
 			for (const directory of directories) {
 				const names =
-					process.platform === "win32" ? [`${tool}.cmd`, tool] : [tool];
+					process.platform === "win32"
+						? [
+								...(tool === "pnpm" ? ["pnpm.exe"] : []),
+								`${tool}.cmd`,
+								tool,
+								...(tool === "pnpm" ? ["pnpm.mjs", "pnpm.cjs"] : []),
+							]
+						: [tool, ...(tool === "pnpm" ? ["pnpm.mjs", "pnpm.cjs"] : [])];
 				for (const name of names) {
 					const shim = join(directory, name);
 					if (!(await exists(shim))) {
@@ -88,43 +326,36 @@ export async function resolveTool(toolchain) {
 					const target = await realpath(shim);
 					const roots = [
 						join(directory, "node_modules", tool),
+						...(tool === "pnpm"
+							? [join(directory, "node_modules", "@pnpm", "exe")]
+							: []),
+						...(basename(directory) === ".bin"
+							? [
+									join(dirname(directory), tool),
+									...(tool === "pnpm"
+										? [join(dirname(directory), "@pnpm", "exe")]
+										: []),
+								]
+							: []),
+						dirname(target),
 						dirname(dirname(target)),
 					];
 					for (const root of roots) {
 						try {
-							const metadata = JSON.parse(
-								await readFile(join(root, "package.json"), "utf8")
-							);
-							const bin =
-								typeof metadata.bin === "string"
-									? metadata.bin
-									: metadata.bin?.[tool];
+							const installed = await installedManager(root, tool, shim);
+							if (!installed) {
+								continue;
+							}
+							found.add(installed.version);
 							if (
-								metadata.name !== tool ||
-								typeof metadata.version !== "string" ||
-								typeof bin !== "string"
+								toolchain.version !== null &&
+								!matchesVersion(toolchain.version, installed.version)
 							) {
 								continue;
 							}
-							const packageRoot = await realpath(root);
-							const entry = await realpath(join(packageRoot, bin));
-							if (!within(packageRoot, entry)) {
-								continue;
-							}
-							// Only execute a package's declared JS entry, never the shell shim.
-							if (!/\.(?:c?js|mjs)$/.test(entry)) {
-								continue;
-							}
-							if (target !== entry) {
-								const content = await readFile(shim, "utf8");
-								const declared = `node_modules/${tool}/${bin.replaceAll("\\", "/").replace(/^\.\//, "")}`;
-								if (!content.replaceAll("\\", "/").includes(declared)) {
-									continue;
-								}
-							}
-							result.version = metadata.version;
-							result.command = await realpath(process.execPath);
-							result.args = [entry];
+							result.version = installed.version;
+							result.command = installed.command;
+							result.args = installed.args;
 							break;
 						} catch {
 							// A PATH entry is not proof of an installed manager.
@@ -137,6 +368,10 @@ export async function resolveTool(toolchain) {
 				if (result.command) {
 					break;
 				}
+			}
+			if (!result.command && found.size > 0) {
+				result.version = [...found][0] ?? null;
+				result.error = `Expected ${toolchain.name} ${toolchain.version}, found ${[...found].join(", ")}; use a major or exact version`;
 			}
 		} else if (toolchain.name === "forge") {
 			result.error =
@@ -167,9 +402,9 @@ export async function resolveTool(toolchain) {
  * Repository scripts remain trusted code, not an OS sandbox. Credentials and
  * user configuration are not inherited; declared network effects are refused.
  * Uses the existing task cwd rather than the user's home.
- * @type {(directory: string) => NodeJS.ProcessEnv}
+ * @type {(directory: string, tool?: string) => NodeJS.ProcessEnv}
  */
-function isolatedEnvironment(directory) {
+function isolatedEnvironment(directory, tool = "node") {
 	/** @type {NodeJS.ProcessEnv} */
 	const environment = {};
 	const allowed = new Set([
@@ -213,6 +448,11 @@ function isolatedEnvironment(directory) {
 		NPM_CONFIG_AUDIT: "false",
 		NPM_CONFIG_FUND: "false",
 		NPM_CONFIG_IGNORE_SCRIPTS: "true",
+		...(tool === "pnpm"
+			? { NPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS: "false" }
+			: {}),
+		NODE_DISABLE_COMPILE_CACHE: "1",
+		COREPACK_ENABLE_NETWORK: "0",
 		NPM_CONFIG_LOGS_MAX: "0",
 		NPM_CONFIG_CACHE: join(directory, ".cina-cache", "npm"),
 	};
@@ -469,7 +709,7 @@ async function execute(task, tool, options) {
 			[...tool.args, ...task.argv.slice(1)],
 			{
 				cwd: task.cwd,
-				env: isolatedEnvironment(task.cwd),
+				env: isolatedEnvironment(task.cwd, task.toolchain.name),
 				shell: false,
 				windowsHide: true,
 				detached: process.platform !== "win32",

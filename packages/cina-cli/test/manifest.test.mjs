@@ -130,6 +130,48 @@ await test("the static catalog identifies exactly seven configured projects", ()
 	}
 });
 
+await test("focused Token and Auth plans do not require aggregate or sibling scripts", (t) => {
+	const { root } = fixture(t);
+	/** @type {Array<[string, string]>} */ const scopes = [
+		["cinatoken", "tool-engines"],
+		["cinaauth", "packages-auth-proxy"],
+	];
+	for (const [project, componentName] of scopes) {
+		const manifest = loadManifest(project);
+		const component = manifest.components.find(
+			(entry) => entry.component === componentName
+		);
+		assert.ok(component);
+		assert.ok(component.tasks.length > 0);
+		mkdirSync(path.join(root, component.root), { recursive: true });
+		writeFileSync(
+			path.join(root, component.root, "package.json"),
+			JSON.stringify({
+				scripts: Object.fromEntries(
+					component.tasks.map((task) => [task.argv[2], task.script])
+				),
+			})
+		);
+		writeFileSync(
+			path.join(root, component.toolchain.lockfile ?? "lock"),
+			"{}\n"
+		);
+		for (const capability of new Set(
+			component.tasks.map((task) => task.capability)
+		)) {
+			const plan = createPlan(manifest, root, capability, componentName);
+			assert.ok(plan.tasks.length > 0);
+			assert.ok(
+				plan.tasks.every(
+					(task) =>
+						task.component === componentName && task.dependencies.length === 0
+				)
+			);
+			assert.deepEqual(plan.effects, ["local-write"]);
+		}
+	}
+});
+
 await test("manifest rejects schema, project, source and premature success claims", () => {
 	/** @type {Array<[string, unknown]>} */
 	const cases = [

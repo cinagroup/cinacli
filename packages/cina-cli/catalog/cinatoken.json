@@ -8,10 +8,10 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
-		"Configured from the pinned main commit; native tasks have not been run by CinaCLI.",
+		"The pinned tool-engines typecheck and 44 unit tests passed natively on 2026-10-01. Other components remain pending; see the local validation report for CinaCLI runner results.",
 		"Use the existing npm workspace and package-lock.json. A pnpm lockfile is also tracked; do not migrate or regenerate either lockfile automatically. Root .nvmrc is 22 and packageManager is not declared.",
 		"Workers and Node/Docker are separate runtimes. Database provisioning, migrations, remote smoke checks and chain preflight are excluded.",
-		"npm lifecycle scripts are part of each declared run: core prebuild removes its own dist; unit test preludes may build local dependencies.",
+		"The runner rejects implicit npm pre/post hooks. Core and proxy build declarations remain blocked until their lifecycle effects are explicitly modeled; tool-engines tasks have no hooks or build dependencies.",
 		"Proxy build is the existing Node bundle script; admin build-docker is the existing local Next standalone build. Worker deployment and Docker image publication remain separate capabilities."
 	],
 	"components": [

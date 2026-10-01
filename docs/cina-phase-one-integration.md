@@ -1,5 +1,10 @@
 # Cina CLI: main integration follow-up
 
+The 2026-10-01 continuation restored the frozen pnpm 12 installation and passed
+the exact root check (7/7). See [engineering validation](cina-engineering-validation.md)
+for the current runner changes, Token/Auth scope and complete result matrix. The
+capacity and installation failure below describe the earlier 2026-09-30 attempt.
+
 The integration base is `f642dc6831902f4c9410d86cffd416279ca1b2e0`, confirmed
 with `git ls-remote` on 2026-09-30. The isolated checkout remains
 `cinacli-phase1`; branch `cina/phase-one-main-integration` starts directly at
@@ -28,7 +33,7 @@ outside the checkout in the task's `artifacts` and `validation` directories.
   signatures to comply with root AGENTS. Executable code and function
   declarations remain unchanged; strict checkJs is preserved.
 
-## Actual integration validation
+## 2026-09-30 integration validation (historical)
 
 | Scope                                            | Outcome                                 |
 | ------------------------------------------------ | --------------------------------------- |
