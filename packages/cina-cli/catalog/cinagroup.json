@@ -8,6 +8,7 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
+		"At this pinned checkout, the historical native quality/source/Functions gates, 25 tests and Astro build passed. On 2026-10-01 the current CinaCLI runner repeated the two declared test tasks on Node 22.23.3: 16 contact and 9 blog/i18n cases passed with structured exit 0. This is scoped engineering evidence, not a current production deployment claim.",
 		"Astro root website uses its existing npm package-lock; Node >=22 is required.",
 		"Preserve content, i18n, factual evidence and Pages Functions gates.",
 		"Production releases remain exclusively in GitHub Actions; manual workflows validate only.",

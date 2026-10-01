@@ -8,6 +8,8 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
+		"The pinned Tools typecheck passed natively in the first pilot and again through the current CinaCLI runner on Node 22.23.3 on 2026-10-01, with structured exit 0. The separately audited offline Worker bundle compiled and parsed, but no Worker runtime acceptance or PDF generation is established.",
+		"Required local PDF asset directories are absent in the pilot checkout. Generation remains blocked pending a reviewed confined asset root and real fonts/books/database inputs; no fixture assets were fabricated.",
 		"The engineering package lives in Tools and uses its existing npm package-lock.",
 		"Local artifact generation, Worker API deployment and R2 publishing are distinct capabilities.",
 		"Only the existing typecheck script is declared. generate-local.ts writes local artifacts, but its asset lookup can search ancestor directories and needs a confined input root before registration.",

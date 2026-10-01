@@ -8,7 +8,8 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
-		"Configured from the pinned main commit; native tasks have not been run by CinaCLI.",
+		"Configured from the pinned main commit. On 2026-10-01 the scoped error-reporting noEmit typecheck and 23 pure Node tests passed both natively and through CinaCLI under Node 24.19.0; all other native tasks remain unverified.",
+		"Repository CI pins Node 24.19.0. The error-reporting pilot preserves the Node 22.23.3 compatibility result and uses an isolated pnpm 11.17.0 whose registry integrity matches packageManager. This scoped pilot does not validate the aggregate Vite+ task graph.",
 		"Use pnpm 11.17.0, the checked-in workspace catalog, and the existing Vite+ task/cache runner; do not replace it with recursive npm or Turbo calls.",
 		"Many build/test capabilities are Vite+ tasks in vite.config.ts rather than package.json scripts. The root native scripts preserve their dependency graph, code generation and timeout behavior.",
 		"lint:check is the isolated lint task. The full lint/types:check scripts include build and may write generated files and artifacts.",
@@ -135,7 +136,38 @@
 				"lockfile": "pnpm-lock.yaml"
 			},
 			"credentialRefs": [],
-			"tasks": []
+			"tasks": [
+				{
+					"task": "check-types",
+					"capability": "check",
+					"argv": ["pnpm", "run", "build"],
+					"cwd": "packages/error-reporting",
+					"dependencies": [],
+					"outputs": [
+						"packages/error-reporting/.cina-cache/npm",
+						"packages/error-reporting/.cina-cache/disabled-global.npmrc"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "tsc"
+				},
+				{
+					"task": "test-unit",
+					"capability": "test",
+					"argv": ["pnpm", "run", "test:run"],
+					"cwd": "packages/error-reporting",
+					"dependencies": [],
+					"outputs": [
+						"packages/error-reporting/node_modules/.vite",
+						"packages/error-reporting/node_modules/.vite-temp",
+						"packages/error-reporting/.cina-cache/npm",
+						"packages/error-reporting/.cina-cache/disabled-global.npmrc"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vitest run"
+				}
+			]
 		},
 		{
 			"component": "gatekeeper-cloudflare",

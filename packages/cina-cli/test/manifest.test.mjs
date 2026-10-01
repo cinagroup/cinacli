@@ -132,11 +132,13 @@ await test("the static catalog identifies exactly seven configured projects", ()
 	}
 });
 
-await test("focused Token and Auth plans do not require aggregate or sibling scripts", (t) => {
+await test("focused native plans do not require aggregate or sibling scripts", (t) => {
 	const { root } = fixture(t);
 	/** @type {Array<[string, string]>} */ const scopes = [
 		["cinatoken", "tool-engines"],
 		["cinaauth", "packages-auth-proxy"],
+		["cinachain", "portal"],
+		["cinaseek", "error-reporting"],
 	];
 	for (const [project, componentName] of scopes) {
 		const manifest = loadManifest(project);
