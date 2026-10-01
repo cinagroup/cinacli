@@ -58,9 +58,13 @@ jobs:
       - name: Pack and smoke-test the extracted package offline
         shell: bash
         run: |
-          mkdir -p "$RUNNER_TEMP/cina-package"
-          npm pack ./packages/cina-cli --ignore-scripts --pack-destination "$RUNNER_TEMP/cina-package"
-          for archive in "$RUNNER_TEMP"/cina-package/*.tgz; do
-            tar -xzf "$archive" -C "$RUNNER_TEMP/cina-package"
+          package_dir="$RUNNER_TEMP/cina-package"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            package_dir="$(cygpath -u "$package_dir")"
+          fi
+          mkdir -p "$package_dir"
+          npm pack ./packages/cina-cli --ignore-scripts --offline --pack-destination "$package_dir"
+          for archive in "$package_dir"/*.tgz; do
+            tar -xzf "$archive" -C "$package_dir"
           done
-          node "$RUNNER_TEMP/cina-package/package/bin/cina.mjs" --help
+          node "$package_dir/package/bin/cina.mjs" --help

@@ -53,3 +53,24 @@ Windows 使用测试自建 junction，其他平台使用目录链接；该契约
 根 `pnpm check`、最终提交、独立打包和远端 CI 的确切结果由交付包的最终结果记录
 保存。本文不会把之前失败版本的 Windows 打包标成通过。发布、部署、远端合并、
 自动合并和凭据修改不属于本切片。
+
+## 随后暴露的 CI 解压路径问题
+
+`c69e5493` 的 Windows CI 已通过质量检查、全部 54 项契约和独立构建。npm pack
+也生成了完整的 14 个包文件，但 GNU tar 把 `$RUNNER_TEMP` 中 `D:` 开头的归档
+路径解释为远程主机，报 `Cannot connect to D: resolve failed`，解压和 help smoke
+没有通过。Linux 同一 CI 全部通过；该次 Windows 不能计为完整 CI 通过。
+
+- [Windows 打包与解压失败原始日志](../../validation/20261001-windows-pack-ci-failed.log)
+- [该提交双平台 CI 步骤记录](../../validation/20261001-windows-cina-ci-progress.json)
+
+独立的后续小修复仅调整 CINA CI 打包步骤：Windows 的 Git Bash 使用 `cygpath -u`
+把临时目录转换为 POSIX 路径，目录创建、npm pack、glob、tar 与 node 共用这个
+目录；Linux 保留原路径。npm pack 明确添加 `--offline`，生命周期脚本仍禁用。
+该修改不改变 runner、上游锁文件、发布 owner guard 或其他工作流。
+
+- [本机同一 Bash 步骤的实际离线验证](../../validation/20261001-windows-bash-pack-local-result.json)
+- [本机含空格 Windows 临时目录的打包日志](../../validation/20261001-windows-bash-pack-local.log)
+
+最终 CI 终态与本地解压 smoke 分别记录，不能相互替代。Roboreview 的外部 setup
+请求三次中止仍属于独立阻塞；本切片没有设置服务凭据或修改其权限。
