@@ -18,7 +18,7 @@ export const PROJECTS = Object.freeze([
 	"cinaclassics",
 ]);
 
-/** @typedef {{ name: 'npm'|'pnpm'|'node'|'forge', version: string|null, lockfile: string|null }} Toolchain */
+/** @typedef {{ name: 'npm'|'pnpm'|'node'|'forge', version: string|null, lockfile: string|null, nodeVersion?: string|null }} Toolchain */
 /** @typedef {{ task: string, capability: 'check'|'build'|'test'|'deploy', argv: string[], cwd: string, dependencies: string[], outputs: string[], effects: ('local-read'|'local-write'|'network-read'|'remote-write')[], timeoutMs: number, script?: string }} Task */
 /** @typedef {{ component: string, root: string, toolchain: Toolchain, credentialRefs: string[], tasks: Task[] }} Component */
 /** @typedef {{ schemaVersion: 1, project: string, root: string, source: {repository: string, commit: string}, verification: 'configured-pending-validation', notes: string[], components: Component[] }} Manifest */
@@ -30,6 +30,21 @@ function requireValue(value, message) {
 	if (!value) {
 		throw new Error(message);
 	}
+}
+/** @type {(version: string | null | undefined) => void} */
+export function assertNodeVersion(version) {
+	if (version === undefined || version === null) {
+		return;
+	}
+	requireValue(
+		typeof version === "string" && /^\d+(\.\d+\.\d+)?$/.test(version),
+		"Node version must be a major, exact version, or null"
+	);
+	requireValue(
+		version === process.versions.node ||
+			version === process.versions.node.split(".")[0],
+		`Expected Node ${version}, found ${process.versions.node}; runtime: ${process.execPath}`
+	);
 }
 /** @type {(value: unknown, keys: string[], label: string) => asserts value is Record<string, unknown>} */
 function object(value, keys, label) {
@@ -128,7 +143,11 @@ export function validateManifest(input) {
 		);
 		components.add(component.component);
 		relativePath(component.root, "component.root");
-		object(component.toolchain, ["name", "version", "lockfile"], "toolchain");
+		object(
+			component.toolchain,
+			["name", "version", "lockfile", "nodeVersion"],
+			"toolchain"
+		);
 		requireValue(
 			["npm", "pnpm", "node", "forge"].includes(
 				String(component.toolchain.name)
@@ -140,6 +159,13 @@ export function validateManifest(input) {
 				(typeof component.toolchain.version === "string" &&
 					/^\d+(\.\d+\.\d+)?$/.test(component.toolchain.version)),
 			"Toolchain version must be a major, exact version, or null"
+		);
+		requireValue(
+			component.toolchain.nodeVersion === undefined ||
+				component.toolchain.nodeVersion === null ||
+				(typeof component.toolchain.nodeVersion === "string" &&
+					/^\d+(\.\d+\.\d+)?$/.test(component.toolchain.nodeVersion)),
+			"Node version must be a major, exact version, or null"
 		);
 		if (component.toolchain.lockfile !== null) {
 			relativePath(component.toolchain.lockfile, "toolchain.lockfile");
@@ -193,9 +219,12 @@ export function validateManifest(input) {
 			);
 			if (["npm", "pnpm"].includes(String(component.toolchain.name))) {
 				requireValue(
-					task.argv.length === 3 &&
+					(task.argv.length === 3 ||
+						(component.toolchain.name === "npm" &&
+							task.argv.length >= 5 &&
+							task.argv[3] === "--")) &&
 						task.argv[1] === "run" &&
-						/^[\w:-]+$/.test(task.argv[2] ?? ""),
+						/^[\w:][\w:-]*$/.test(task.argv[2] ?? ""),
 					"Only explicit package scripts are supported"
 				);
 				requireValue(
@@ -394,6 +423,7 @@ export function createPlan(manifest, root, capability, componentName) {
 	}
 	const tasks = orderTasks(all.filter((task) => ids.has(task.id))).map(
 		(task) => {
+			assertNodeVersion(task.toolchain.nodeVersion);
 			const component = manifest.components.find(
 				(entry) => entry.component === task.component
 			);

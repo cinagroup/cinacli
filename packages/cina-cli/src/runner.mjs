@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { constants } from "node:fs";
+import { constants, realpathSync } from "node:fs";
 import {
 	access,
 	lstat,
@@ -18,8 +18,9 @@ import {
 	relative,
 	sep,
 } from "node:path";
+import { assertNodeVersion } from "./manifest.mjs";
 
-/** @typedef {{name: "node" | "npm" | "pnpm" | "forge", version: string | null, lockfile: string | null}} Toolchain */
+/** @typedef {{name: "node" | "npm" | "pnpm" | "forge", version: string | null, lockfile: string | null, nodeVersion?: string | null}} Toolchain */
 /** @typedef {{id: string, component: string, capability: string, argv: string[], cwd: string, dependencies: string[], outputs: string[], effects: string[], timeoutMs: number, toolchain: Toolchain, script?: string}} Task */
 /** @typedef {{project: string, repoRoot: string, tasks: Task[]}} Plan */
 /** @typedef {{available: boolean, name: string, version: string | null, command: string | null, args: string[], error?: string}} ToolResolution */
@@ -296,6 +297,7 @@ export async function resolveTool(toolchain) {
 		args: [],
 	};
 	try {
+		assertNodeVersion(toolchain.nodeVersion);
 		if (toolchain.name === "node") {
 			result.version = process.versions.node;
 			result.command = await realpath(process.execPath);
@@ -425,6 +427,18 @@ function isolatedEnvironment(directory, tool = "node") {
 			environment[key] = value;
 		}
 	}
+	if (managers.has(tool)) {
+		const paths = Object.entries(environment).filter(
+			([key]) => key.toLowerCase() === "path"
+		);
+		for (const [key] of paths) {
+			delete environment[key];
+		}
+		environment.PATH = [
+			dirname(realpathSync(process.execPath)),
+			...paths.map(([, value]) => value).filter(Boolean),
+		].join(delimiter);
+	}
 	return {
 		...environment,
 		// libuv restores USERPROFILE on Windows when omitted from an env block.
@@ -521,7 +535,9 @@ function validateCommand(task) {
 	if (
 		!Array.isArray(task.argv) ||
 		task.argv.length < 2 ||
-		task.argv.some((arg) => typeof arg !== "string" || arg.includes("\0"))
+		task.argv.some(
+			(arg) => typeof arg !== "string" || arg.length === 0 || arg.includes("\0")
+		)
 	) {
 		throw new Error(
 			`${task.id}: argv must contain an executable and arguments without NUL`
@@ -535,9 +551,13 @@ function validateCommand(task) {
 	if (
 		managers.has(task.toolchain.name) &&
 		(task.argv[1] !== "run" ||
-			!task.argv[2] ||
-			task.argv[2].startsWith("-") ||
-			(task.argv.length > 3 && task.argv[3] !== "--"))
+			!/^[\w:][\w:-]*$/.test(task.argv[2] ?? "") ||
+			!(
+				task.argv.length === 3 ||
+				(task.toolchain.name === "npm" &&
+					task.argv.length >= 5 &&
+					task.argv[3] === "--")
+			))
 	) {
 		throw new Error(
 			`${task.id}: only an explicit installed package-manager run script is supported`

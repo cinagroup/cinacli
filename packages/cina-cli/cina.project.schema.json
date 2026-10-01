@@ -180,6 +180,13 @@
 					],
 					"description": "Existing major or exact version; null records an unpinned version and never requests installation."
 				},
+				"nodeVersion": {
+					"anyOf": [
+						{ "type": "null" },
+						{ "type": "string", "pattern": "^\\d+(\\.\\d+\\.\\d+)?$" }
+					],
+					"description": "Optional current Node runtime major or exact version. Missing/null is unpinned. A mismatch blocks plan, doctor and run without downloading a runtime."
+				},
 				"lockfile": {
 					"anyOf": [{ "type": "null" }, { "$ref": "#/$defs/relativePath" }]
 				}
@@ -216,11 +223,17 @@
 									"properties": {
 										"argv": {
 											"minItems": 3,
-											"maxItems": 3,
+											"anyOf": [
+												{ "maxItems": 3 },
+												{
+													"minItems": 5,
+													"prefixItems": [{}, {}, {}, { "const": "--" }]
+												}
+											],
 											"prefixItems": [
 												{ "const": "npm" },
 												{ "const": "run" },
-												{ "type": "string", "pattern": "^[\\w:-]+$" }
+												{ "type": "string", "pattern": "^[\\w:][\\w:-]*$" }
 											]
 										}
 									}
@@ -247,7 +260,7 @@
 											"prefixItems": [
 												{ "const": "pnpm" },
 												{ "const": "run" },
-												{ "type": "string", "pattern": "^[\\w:-]+$" }
+												{ "type": "string", "pattern": "^[\\w:][\\w:-]*$" }
 											]
 										}
 									}

@@ -23,7 +23,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -85,7 +86,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -96,7 +98,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -107,7 +110,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -118,7 +122,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -129,7 +134,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -140,7 +146,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -151,7 +158,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -162,7 +170,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -173,7 +182,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -184,7 +194,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -211,7 +222,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -222,7 +234,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -233,7 +246,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -244,7 +258,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -255,7 +270,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -266,7 +282,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -277,7 +294,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -288,7 +306,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -299,7 +318,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -310,7 +330,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -321,7 +342,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -332,7 +354,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -343,7 +366,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -354,7 +378,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -365,7 +390,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -376,7 +402,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -387,7 +414,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -398,7 +426,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -409,7 +438,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -420,7 +450,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -431,7 +462,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -442,7 +474,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -453,7 +486,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -464,7 +498,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -475,7 +510,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -486,7 +522,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -497,7 +534,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []
@@ -508,7 +546,8 @@
 			"toolchain": {
 				"name": "pnpm",
 				"version": "11.1.1",
-				"lockfile": "pnpm-lock.yaml"
+				"lockfile": "pnpm-lock.yaml",
+				"nodeVersion": "24"
 			},
 			"credentialRefs": [],
 			"tasks": []

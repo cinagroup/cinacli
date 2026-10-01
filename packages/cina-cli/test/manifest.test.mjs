@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
 	existsSync,
 	mkdirSync,
@@ -12,6 +13,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
 	PROJECTS,
 	containedPath,
@@ -142,6 +144,7 @@ await test("focused Token and Auth plans do not require aggregate or sibling scr
 			(entry) => entry.component === componentName
 		);
 		assert.ok(component);
+		component.toolchain.nodeVersion = process.versions.node;
 		assert.ok(component.tasks.length > 0);
 		mkdirSync(path.join(root, component.root), { recursive: true });
 		writeFileSync(
@@ -168,6 +171,222 @@ await test("focused Token and Auth plans do not require aggregate or sibling scr
 				)
 			);
 			assert.deepEqual(plan.effects, ["local-write"]);
+		}
+	}
+});
+
+await test("focused Shop plans select only reviewed unit files and one frontend", (t) => {
+	const { root } = fixture(t);
+	const manifest = loadManifest("cinashop");
+	for (const componentName of ["workers-ts", "view-kefu-ts"]) {
+		const component = manifest.components.find(
+			(entry) => entry.component === componentName
+		);
+		assert.ok(component);
+		mkdirSync(path.join(root, component.root), { recursive: true });
+		writeFileSync(
+			path.join(root, component.root, "package.json"),
+			JSON.stringify({
+				scripts: Object.fromEntries(
+					component.tasks.map((task) => [task.argv[2], task.script])
+				),
+			})
+		);
+		writeFileSync(
+			path.join(root, component.toolchain.lockfile ?? "lock"),
+			"{}\n"
+		);
+		const capability = componentName === "workers-ts" ? "test" : "build";
+		const plan = createPlan(manifest, root, capability, componentName);
+		assert.ok(plan.tasks.every((task) => task.component === componentName));
+		assert.ok(plan.tasks.every((task) => task.dependencies.length === 0));
+		assert.deepEqual(plan.effects, ["local-write"]);
+		if (componentName === "workers-ts") {
+			assert.deepEqual(
+				plan.tasks
+					.map((task) => task.argv)
+					.sort((left, right) => (left[4] ?? "").localeCompare(right[4] ?? "")),
+				[
+					["npm", "run", "test:unit", "--", "test/cart-price-display.test.ts"],
+					["npm", "run", "test:unit", "--", "test/request-body.test.ts"],
+				]
+			);
+		} else {
+			assert.equal(plan.tasks.length, 1);
+			assert.deepEqual(plan.tasks[0]?.argv, ["npm", "run", "build"]);
+		}
+	}
+});
+
+await test("Node runtime declarations remain static and accept only major/exact/null values", () => {
+	for (const nodeVersion of [undefined, null, "22", "22.23.3"]) {
+		const manifest = example();
+		firstComponent(manifest).toolchain.nodeVersion = nodeVersion;
+		assert.equal(validateManifest(manifest), manifest);
+	}
+	for (const nodeVersion of [
+		22,
+		false,
+		"",
+		"22.1",
+		">=22",
+		"22.23.3-rc.1",
+		{},
+	]) {
+		const manifest = example();
+		const component = firstComponent(manifest);
+		assert.throws(
+			() =>
+				validateManifest({
+					...manifest,
+					components: [
+						{
+							...component,
+							toolchain: { ...component.toolchain, nodeVersion },
+						},
+					],
+				}),
+			/Node version/
+		);
+	}
+});
+
+await test("plan checks Node runtime only for selected tasks and their dependencies", (t) => {
+	const { root } = fixture(t);
+	const manifest = example();
+	firstComponent(manifest).toolchain.nodeVersion = process.versions.node;
+	manifest.components.push({
+		component: "other",
+		root: ".",
+		toolchain: {
+			name: "node",
+			version: null,
+			lockfile: null,
+			nodeVersion: "999",
+		},
+		credentialRefs: [],
+		tasks: [
+			{
+				task: "test",
+				capability: "test",
+				argv: ["node", "never-execute.mjs"],
+				cwd: ".",
+				dependencies: [],
+				outputs: [],
+				effects: ["local-read"],
+				timeoutMs: 1000,
+			},
+		],
+	});
+	assert.equal(
+		createPlan(validateManifest(manifest), root, "check", "site").tasks.length,
+		1
+	);
+	assert.throws(
+		() => createPlan(manifest, root, "test", "other"),
+		/Expected Node 999/
+	);
+	const check = firstComponent(manifest).tasks[1];
+	assert.ok(check);
+	check.dependencies = ["other/test"];
+	assert.throws(
+		() => createPlan(validateManifest(manifest), root, "check", "site"),
+		/Expected Node 999/
+	);
+});
+
+await test("doctor and plan reject a mismatched runtime while inspect stays static", (t) => {
+	const { root } = fixture(t);
+	const manifest = example();
+	firstComponent(manifest).toolchain.nodeVersion = "999";
+	writeFileSync(path.join(root, "cina.project.json"), JSON.stringify(manifest));
+	writeFileSync(
+		path.join(root, "check.mjs"),
+		'throw new Error("Must never execute");'
+	);
+	for (const [command, status] of [
+		["doctor", 1],
+		["plan", 2],
+		["inspect", 0],
+	]) {
+		const result = spawnSync(
+			process.execPath,
+			[
+				fileURLToPath(new URL("../src/dev.mjs", import.meta.url)),
+				String(command),
+				...(command === "plan" ? ["check"] : []),
+				"--project",
+				"cinagroup",
+				"--repo",
+				root,
+			],
+			{ cwd: root, encoding: "utf8", timeout: 10000, windowsHide: true }
+		);
+		assert.equal(result.status, status, result.stderr);
+		if (command !== "inspect") {
+			assert.match(result.stdout, /Expected Node 999/);
+			assert.doesNotMatch(result.stdout + result.stderr, /Must never execute/);
+		}
+		assert.equal(existsSync(path.join(root, ".cina-cache")), false);
+		assert.equal(existsSync(path.join(root, "dist")), false);
+	}
+});
+
+await test("npm manifests forward only reviewed fixed arguments after an explicit separator", (t) => {
+	const { root } = fixture(t);
+	const manifest = example();
+	const build = firstTask(manifest);
+	build.argv = ["npm", "run", "build", "--", "one.test.mjs", "two.test.mjs"];
+	assert.deepEqual(
+		createPlan(validateManifest(manifest), root, "build").tasks.at(-1)?.argv,
+		build.argv
+	);
+	for (const argv of [
+		["npm", "run", "build", "--"],
+		["npm", "run", "build", "one.test.mjs"],
+		["npm", "run", "build", "--", ""],
+	]) {
+		build.argv = argv;
+		assert.throws(
+			() => validateManifest(manifest),
+			/explicit package scripts|non-empty strings/
+		);
+	}
+	firstComponent(manifest).toolchain.name = "pnpm";
+	for (const entry of firstComponent(manifest).tasks) {
+		entry.argv[0] = "pnpm";
+	}
+	build.argv = ["pnpm", "run", "build", "--", "one.test.mjs"];
+	assert.throws(() => validateManifest(manifest), /explicit package scripts/);
+});
+
+await test("package script names cannot be interpreted as npm or pnpm options", () => {
+	for (const name of ["npm", "pnpm"]) {
+		for (const scriptName of [
+			"check:types",
+			"check-types",
+			"--no-ignore-scripts",
+			"--workspace",
+			"-w",
+		]) {
+			const manifest = example();
+			firstComponent(manifest).toolchain.name = name === "npm" ? "npm" : "pnpm";
+			for (const task of firstComponent(manifest).tasks) {
+				task.argv[0] = name;
+			}
+			firstTask(manifest).argv =
+				name === "npm"
+					? [name, "run", scriptName, "--", "build"]
+					: [name, "run", scriptName];
+			if (scriptName.startsWith("-")) {
+				assert.throws(
+					() => validateManifest(manifest),
+					/explicit package scripts/,
+					`${name} ${scriptName}`
+				);
+			} else {
+				assert.equal(validateManifest(manifest), manifest);
+			}
 		}
 	}
 });
@@ -478,8 +697,40 @@ await test("the packaged schema is static Draft 2020-12 with explicit fields and
 	assert.ok(version.test("11"));
 	assert.ok(version.test("11.1.1"));
 	assert.equal(version.test("11.1"), false);
+	assert.equal(schema.$defs.toolchain.required.includes("nodeVersion"), false);
+	assert.equal(
+		schema.$defs.toolchain.properties.nodeVersion.anyOf[0].type,
+		"null"
+	);
+	const nodeVersion = new RegExp(
+		schema.$defs.toolchain.properties.nodeVersion.anyOf[1].pattern
+	);
+	assert.ok(nodeVersion.test("22"));
+	assert.ok(nodeVersion.test("22.23.3"));
+	for (const invalid of ["22.1", ">=22", "", "22.23.3-rc.1"]) {
+		assert.equal(nodeVersion.test(invalid), false);
+	}
 	const npmRule = schema.$defs.component.allOf[0].then.properties.tasks.items;
 	assert.ok(
 		new RegExp(npmRule.properties.argv.prefixItems[2].pattern).test("check")
+	);
+	for (const rule of schema.$defs.component.allOf.slice(0, 2)) {
+		const scriptName = new RegExp(
+			rule.then.properties.tasks.items.properties.argv.prefixItems[2].pattern
+		);
+		for (const allowed of ["check:types", "check-types"]) {
+			assert.ok(scriptName.test(allowed), allowed);
+		}
+		for (const forbidden of ["--no-ignore-scripts", "--workspace", "-w"]) {
+			assert.equal(scriptName.test(forbidden), false, forbidden);
+		}
+	}
+	assert.equal(npmRule.properties.argv.anyOf[0].maxItems, 3);
+	assert.equal(npmRule.properties.argv.anyOf[1].minItems, 5);
+	assert.equal(npmRule.properties.argv.anyOf[1].prefixItems[3].const, "--");
+	assert.equal(
+		schema.$defs.component.allOf[1].then.properties.tasks.items.properties.argv
+			.maxItems,
+		3
 	);
 });

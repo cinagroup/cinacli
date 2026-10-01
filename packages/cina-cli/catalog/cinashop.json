@@ -8,10 +8,12 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
-		"Configured from the pinned main commit; native tasks have not been run by CinaCLI.",
+		"Configured from the pinned main commit, which still matched remote main on 2026-10-01. This project remains configured-pending-validation; only the scoped Workers and Kefu pilot has been validated.",
 		"There is no root package.json. workers-ts and each view component own a package-lock.json; packageManager and engines are not declared.",
 		"Database generation, migration, data copy/plan/verify and audit scripts are excluded from this first slice because their names do not establish a local-only effect boundary.",
-		"Worker runtime tests use the existing workerd configuration and may write local caches/state. The npm postinstall patch is part of dependency preparation, not doctor or plan.",
+		"The two declared Workers test tasks select only request-body.test.ts and cart-price-display.test.ts through the original test:unit script. Their Vitest configuration has no setup/globalSetup/plugin hooks, and the reviewed import closures need no database, Redis, business API, credentials or migrations. The aggregate unit and Worker runtime suites are not declared or validated by this pilot.",
+		"On 2026-10-01, native tests passed 5 request-body cases and 22 cart-price cases, the original Workers unit/runtime noEmit typecheck passed, and the Kefu production build passed with Node 22.23.3/npm 10.9.9. Independent frozen npm ci --ignore-scripts installs preserved both component locks; the local-only Drizzle postinstall patch was not needed or executed. The first typecheck exceeded a 120-second validation deadline; the unchanged command passed with a 300-second deadline. The initial Kefu build hit a sandbox ancestor-directory read denial; the identical approved retry passed.",
+		"The same scoped tasks also passed through CinaCLI: Workers check and both fixed-file tests, plus Kefu build, all returned structured success/exit 0; their three plan invocations returned exit 0. The 27 unit cases do not establish runtime acceptance. The remaining Workers suites, Kefu tests and Admin/PC/Supplier/UniApp components are still pending validation.",
 		"PC build includes its auth and image unit test scripts. UniApp H5, Weixin and app builds are separate local artifact capabilities; no publication or deployment task is declared."
 	],
 	"components": [
@@ -33,23 +35,50 @@
 					"dependencies": [],
 					"outputs": ["workers-ts/.cina-cache/npm"],
 					"effects": ["local-write"],
-					"timeoutMs": 120000,
+					"timeoutMs": 300000,
 					"script": "npm run typecheck:unit && npm run typecheck:runtime"
 				},
 				{
-					"task": "test",
+					"task": "test-request-body",
 					"capability": "test",
-					"argv": ["npm", "run", "test"],
+					"argv": [
+						"npm",
+						"run",
+						"test:unit",
+						"--",
+						"test/request-body.test.ts"
+					],
 					"cwd": "workers-ts",
 					"dependencies": [],
 					"outputs": [
-						"workers-ts/.wrangler",
 						"workers-ts/node_modules/.vite",
+						"workers-ts/node_modules/.vite-temp",
 						"workers-ts/.cina-cache/npm"
 					],
 					"effects": ["local-write"],
 					"timeoutMs": 120000,
-					"script": "npm run test:unit && npm run test:runtime"
+					"script": "vitest run --config vitest.config.ts"
+				},
+				{
+					"task": "test-cart-price",
+					"capability": "test",
+					"argv": [
+						"npm",
+						"run",
+						"test:unit",
+						"--",
+						"test/cart-price-display.test.ts"
+					],
+					"cwd": "workers-ts",
+					"dependencies": [],
+					"outputs": [
+						"workers-ts/node_modules/.vite",
+						"workers-ts/node_modules/.vite-temp",
+						"workers-ts/.cina-cache/npm"
+					],
+					"effects": ["local-write"],
+					"timeoutMs": 120000,
+					"script": "vitest run --config vitest.config.ts"
 				}
 			]
 		},
@@ -92,7 +121,11 @@
 					"argv": ["npm", "run", "build"],
 					"cwd": "view/kefu-ts",
 					"dependencies": [],
-					"outputs": ["view/kefu-ts/dist", "view/kefu-ts/.cina-cache/npm"],
+					"outputs": [
+						"view/kefu-ts/dist",
+						"view/kefu-ts/node_modules/.vite-temp",
+						"view/kefu-ts/.cina-cache/npm"
+					],
 					"effects": ["local-write"],
 					"timeoutMs": 120000,
 					"script": "vue-tsc --noEmit && vite build"

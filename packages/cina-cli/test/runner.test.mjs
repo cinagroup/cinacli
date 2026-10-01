@@ -1,9 +1,11 @@
 /* oxlint-disable turbo/no-undeclared-env-vars -- Runtime environment isolation is intentionally exercised outside Turbo caching. */
 import assert from "node:assert/strict";
 import {
+	chmod,
 	mkdtemp,
 	mkdir,
 	readFile,
+	realpath,
 	rm,
 	symlink,
 	writeFile,
@@ -73,6 +75,229 @@ await test("node resolution is static and validates major/exact versions", async
 			.available,
 		false
 	);
+});
+
+await test("declared Node runtime mismatches reject the complete plan before any script", async () => {
+	await fixture(async (root) => {
+		const marker = join(root, "unexpected-runtime-write");
+		const script = `require('node:fs').writeFileSync(${JSON.stringify(marker)},'unexpected')`;
+		for (const nodeVersion of ["999", ">=22", "22.1"]) {
+			const requirement = {
+				name: /** @type {const} */ ("npm"),
+				version: null,
+				lockfile: null,
+				nodeVersion,
+			};
+			const resolved = await resolveTool(requirement);
+			assert.equal(resolved.available, false);
+			assert.match(resolved.error ?? "", /Node/);
+			const result = await runPlan(
+				{
+					project: "fixture",
+					repoRoot: root,
+					tasks: [
+						task(root, "first", script, { effects: ["local-write"] }),
+						task(root, "pinned", script, {
+							toolchain: {
+								name: "node",
+								version: null,
+								lockfile: null,
+								nodeVersion,
+							},
+						}),
+					],
+				},
+				{ allowLocalWrite: true }
+			);
+			assert.equal(result.status, "invalid");
+			assert.equal(result.exitCode, 2);
+			assert.deepEqual(result.tasks, []);
+			await assert.rejects(readFile(marker), { code: "ENOENT" });
+		}
+		for (const nodeVersion of [
+			null,
+			process.versions.node,
+			process.versions.node.split(".")[0],
+		]) {
+			const result = await runPlan({
+				project: "fixture",
+				repoRoot: root,
+				tasks: [
+					task(
+						root,
+						"matching",
+						"process.stdout.write(process.versions.node)",
+						{
+							toolchain: {
+								name: "node",
+								version: null,
+								lockfile: null,
+								nodeVersion,
+							},
+						}
+					),
+				],
+			});
+			assert.equal(result.status, "success");
+		}
+	});
+});
+
+await test("package-manager fixed argv tails require npm, a separator and nonempty arguments", async () => {
+	await fixture(async (root) => {
+		for (const argv of [
+			["npm", "run", "check", "--"],
+			["npm", "run", "check", "one.test.mjs"],
+			["npm", "run", "check", "--", ""],
+			["pnpm", "run", "check", "--", "one.test.mjs"],
+		]) {
+			const result = await runPlan(
+				{
+					project: "fixture",
+					repoRoot: root,
+					tasks: [
+						task(root, "invalid-tail", "", {
+							argv,
+							effects: ["local-write"],
+							toolchain: {
+								name: argv[0] === "npm" ? "npm" : "pnpm",
+								version: null,
+								lockfile: null,
+							},
+						}),
+					],
+				},
+				{ allowLocalWrite: true }
+			);
+			assert.equal(result.status, "invalid");
+			assert.equal(result.exitCode, 2);
+			assert.deepEqual(result.tasks, []);
+		}
+	});
+});
+
+await test("npm and pnpm option-like script names reject the entire plan without executing", async () => {
+	await fixture(async (root) => {
+		const marker = join(root, "unexpected-option-execution");
+		const script = `require('node:fs').writeFileSync(${JSON.stringify(marker)},'unexpected')`;
+		for (const name of ["npm", "pnpm"]) {
+			for (const scriptName of ["--no-ignore-scripts", "--workspace", "-w"]) {
+				const result = await runPlan(
+					{
+						project: "fixture",
+						repoRoot: root,
+						tasks: [
+							task(root, "first", script, { effects: ["local-write"] }),
+							task(root, "option", "", {
+								argv:
+									name === "npm"
+										? [name, "run", scriptName, "--", "build"]
+										: [name, "run", scriptName],
+								effects: ["local-write"],
+								toolchain: {
+									name: name === "npm" ? "npm" : "pnpm",
+									version: null,
+									lockfile: null,
+								},
+							}),
+						],
+					},
+					{ allowLocalWrite: true }
+				);
+				assert.equal(result.status, "invalid");
+				assert.equal(result.exitCode, 2);
+				assert.match(
+					result.error ?? "",
+					/only an explicit installed package-manager run script/
+				);
+				assert.deepEqual(result.tasks, []);
+				await assert.rejects(readFile(marker), { code: "ENOENT" });
+			}
+		}
+	});
+});
+
+await test("npm fixed argv tails use the parent Node before an inherited global runtime", async (context) => {
+	const toolchain = {
+		name: /** @type {const} */ ("npm"),
+		version: null,
+		lockfile: null,
+		nodeVersion: process.versions.node,
+	};
+	if (!(await resolveTool(toolchain)).available) {
+		context.skip("No installed npm CLI with static metadata");
+		return;
+	}
+	await fixture(async (root) => {
+		const sentinel = join(root, "global-runtime");
+		const marker = join(root, "unexpected-global-node");
+		await mkdir(sentinel);
+		const fakeNode = join(
+			sentinel,
+			process.platform === "win32" ? "node.cmd" : "node"
+		);
+		await writeFile(
+			fakeNode,
+			process.platform === "win32"
+				? `@echo off\n@echo unexpected > "${marker}"\n@exit /b 91\n`
+				: `#!/bin/sh\nprintf unexpected > '${marker.replaceAll("'", "'\\''")}'\nexit 91\n`
+		);
+		await chmod(fakeNode, 0o755);
+		await writeFile(
+			join(root, "package.json"),
+			JSON.stringify({ private: true, scripts: { check: "node probe.cjs" } })
+		);
+		await writeFile(
+			join(root, "probe.cjs"),
+			"console.log('CINA_NODE_RUNTIME='+JSON.stringify({version:process.versions.node,execPath:process.execPath,argv:process.argv.slice(2)}))"
+		);
+		const previous = process.env.PATH;
+		let output = "";
+		const args = ["one.test.mjs", "two.test.mjs", "--literal=space value"];
+		try {
+			process.env.PATH = [sentinel, previous].filter(Boolean).join(delimiter);
+			const result = await runPlan(
+				{
+					project: "fixture",
+					repoRoot: root,
+					tasks: [
+						task(root, "npm-runtime", "", {
+							argv: ["npm", "run", "check", "--", ...args],
+							toolchain,
+							effects: ["local-write"],
+							script: "node probe.cjs",
+							timeoutMs: 10000,
+						}),
+					],
+				},
+				{
+					allowLocalWrite: true,
+					onOutput: (_id, _stream, chunk) => {
+						output += chunk;
+					},
+				}
+			);
+			assert.equal(result.status, "success", output);
+			const line = output
+				.split(/\r?\n/)
+				.find((entry) => entry.startsWith("CINA_NODE_RUNTIME="));
+			assert.ok(line, output);
+			const observed = JSON.parse(line.slice("CINA_NODE_RUNTIME=".length));
+			assert.equal(observed.version, process.versions.node);
+			assert.equal(
+				await realpath(observed.execPath),
+				await realpath(process.execPath)
+			);
+			assert.deepEqual(observed.argv, args);
+			await assert.rejects(readFile(marker), { code: "ENOENT" });
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
 });
 
 await test("argv metacharacters remain literal and credential environment is removed", async () => {
@@ -694,7 +919,7 @@ await test("npm-installed pnpm .bin relative shims resolve without executing the
 		);
 		await writeFile(
 			join(packageRoot, "bin", "pnpm.cjs"),
-			"console.log(JSON.stringify(process.argv.slice(2)))"
+			"console.log(JSON.stringify({argv:process.argv.slice(2),manageVersions:process.env.NPM_CONFIG_MANAGE_PACKAGE_MANAGER_VERSIONS}))"
 		);
 		const shim = join(
 			shims,
@@ -729,7 +954,7 @@ await test("npm-installed pnpm .bin relative shims resolve without executing the
 					repoRoot: root,
 					tasks: [
 						task(root, "shim", "", {
-							argv: ["pnpm", "run", "check", "--", "literal & space"],
+							argv: ["pnpm", "run", "check"],
 							toolchain,
 							effects: ["local-write"],
 						}),
@@ -743,12 +968,10 @@ await test("npm-installed pnpm .bin relative shims resolve without executing the
 				}
 			);
 			assert.equal(result.status, "success");
-			assert.deepEqual(JSON.parse(output), [
-				"run",
-				"check",
-				"--",
-				"literal & space",
-			]);
+			assert.deepEqual(JSON.parse(output), {
+				argv: ["run", "check"],
+				manageVersions: "false",
+			});
 			await writeFile(shim, "node arbitrary-downloader.cjs");
 			assert.equal((await resolveTool(toolchain)).available, false);
 		} finally {

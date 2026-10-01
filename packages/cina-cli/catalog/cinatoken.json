@@ -8,7 +8,7 @@
 	},
 	"verification": "configured-pending-validation",
 	"notes": [
-		"The pinned tool-engines typecheck and 44 unit tests passed natively on 2026-10-01. Other components remain pending; see the local validation report for CinaCLI runner results.",
+		"The pinned tool-engines typecheck and 44 unit tests passed both natively and through CinaCLI on official Node 22.23.3 on 2026-10-01. Other components remain pending; Node 24 plan/run/doctor correctly reject the declared Node 22 requirement before scripts run.",
 		"Use the existing npm workspace and package-lock.json. A pnpm lockfile is also tracked; do not migrate or regenerate either lockfile automatically. Root .nvmrc is 22 and packageManager is not declared.",
 		"Workers and Node/Docker are separate runtimes. Database provisioning, migrations, remote smoke checks and chain preflight are excluded.",
 		"The runner rejects implicit npm pre/post hooks. Core and proxy build declarations remain blocked until their lifecycle effects are explicitly modeled; tool-engines tasks have no hooks or build dependencies.",
@@ -21,7 +21,8 @@
 			"toolchain": {
 				"name": "npm",
 				"version": null,
-				"lockfile": "package-lock.json"
+				"lockfile": "package-lock.json",
+				"nodeVersion": "22"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -55,7 +56,8 @@
 			"toolchain": {
 				"name": "npm",
 				"version": null,
-				"lockfile": "package-lock.json"
+				"lockfile": "package-lock.json",
+				"nodeVersion": "22"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -78,7 +80,8 @@
 			"toolchain": {
 				"name": "npm",
 				"version": null,
-				"lockfile": "package-lock.json"
+				"lockfile": "package-lock.json",
+				"nodeVersion": "22"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -112,7 +115,8 @@
 			"toolchain": {
 				"name": "npm",
 				"version": null,
-				"lockfile": "package-lock.json"
+				"lockfile": "package-lock.json",
+				"nodeVersion": "22"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -146,7 +150,8 @@
 			"toolchain": {
 				"name": "npm",
 				"version": null,
-				"lockfile": "package-lock.json"
+				"lockfile": "package-lock.json",
+				"nodeVersion": "22"
 			},
 			"credentialRefs": [],
 			"tasks": [
@@ -191,7 +196,8 @@
 			"toolchain": {
 				"name": "npm",
 				"version": null,
-				"lockfile": "package-lock.json"
+				"lockfile": "package-lock.json",
+				"nodeVersion": "22"
 			},
 			"credentialRefs": [],
 			"tasks": [

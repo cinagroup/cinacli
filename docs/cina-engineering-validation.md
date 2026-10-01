@@ -1,5 +1,10 @@
 # Cina CLI engineering validation: 2026-10-01
 
+This report records the local slice saved as `7747146f`. The later Node 22
+verification and scoped Shop continuation are recorded in
+[the Node/Shop report](cina-node-shop-validation.md); its results supersede the
+Node 22 and Shop gaps listed below without changing this historical evidence.
+
 The independent checkout is `cinacli-phase1`, branch
 `cina/phase-one-main-integration`, continuing local commit
 `2366789ab011727ff361bae6673da02a9a17534f`. The base and read-only remote main
