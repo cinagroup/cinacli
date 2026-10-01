@@ -351,7 +351,9 @@ await test("argv metacharacters remain literal and credential environment is rem
 			for (const key of Object.keys(previous)) {
 				assert.equal(
 					data.env[key],
-					["HOME", "USERPROFILE"].includes(key) ? root : undefined
+					["HOME", "USERPROFILE"].includes(key)
+						? await realpath(root)
+						: undefined
 				);
 			}
 			assert.equal(data.env.WRANGLER_SEND_METRICS, "false");
@@ -800,7 +802,7 @@ await test("native pnpm 11/12 resolves statically and chooses an installed match
 				assert.equal(resolved.available, true);
 				assert.equal(
 					resolved.command,
-					/** @type {typeof twelve} */ (expected).entry
+					await realpath(/** @type {typeof twelve} */ (expected).entry)
 				);
 				assert.deepEqual(resolved.args, []);
 			}
@@ -946,7 +948,9 @@ await test("npm-installed pnpm .bin relative shims resolve without executing the
 			const resolved = await resolveTool(toolchain);
 			assert.equal(resolved.available, true);
 			assert.equal(resolved.version, "11.1.1");
-			assert.deepEqual(resolved.args, [join(packageRoot, "bin", "pnpm.cjs")]);
+			assert.deepEqual(resolved.args, [
+				await realpath(join(packageRoot, "bin", "pnpm.cjs")),
+			]);
 			let output = "";
 			const result = await runPlan(
 				{
@@ -1023,7 +1027,7 @@ await test("pnpm native wrappers use installed matching platform metadata and ne
 			};
 			const resolved = await resolveTool(toolchain);
 			assert.equal(resolved.available, true);
-			assert.equal(resolved.command, native.entry);
+			assert.equal(resolved.command, await realpath(native.entry));
 			assert.deepEqual(resolved.args, []);
 			await writeFile(
 				join(nativeRoot, "package.json"),
@@ -1108,7 +1112,7 @@ await test("pnpm 11 scoped exe shims resolve legacy platform packages with files
 					lockfile: null,
 				});
 				assert.equal(resolved.available, true);
-				assert.equal(resolved.command, native.entry);
+				assert.equal(resolved.command, await realpath(native.entry));
 				assert.deepEqual(resolved.args, []);
 			}
 			await rm(join(native.root, "dist", "pnpm.mjs"));
@@ -1182,7 +1186,7 @@ await test("pnpm 11 module entry requires matching package metadata and an inter
 			};
 			const resolved = await resolveTool(toolchain);
 			assert.equal(resolved.available, true);
-			assert.deepEqual(resolved.args, [entry]);
+			assert.deepEqual(resolved.args, [await realpath(entry)]);
 			let output = "";
 			const result = await runPlan(
 				{
@@ -1368,7 +1372,7 @@ await test("npm stock prefix shim maps its percent-tilde-dp0 parameter without r
 			};
 			const resolved = await resolveTool(toolchain);
 			assert.equal(resolved.available, true);
-			assert.deepEqual(resolved.args, [entry]);
+			assert.deepEqual(resolved.args, [await realpath(entry)]);
 			let output = "";
 			const result = await runPlan(
 				{
@@ -1391,6 +1395,109 @@ await test("npm stock prefix shim maps its percent-tilde-dp0 parameter without r
 			);
 			assert.equal(result.status, "success");
 			assert.deepEqual(JSON.parse(output), ["run", "check"]);
+		} finally {
+			if (previous === undefined) {
+				delete process.env.PATH;
+			} else {
+				process.env.PATH = previous;
+			}
+		}
+	});
+});
+
+await test("npm and pnpm resolve and run through an aliased root while rejecting external cache links", async () => {
+	await fixture(async (root) => {
+		const physical = join(root, "physical");
+		const alias = join(root, "alias");
+		const repo = join(alias, "repo");
+		const tools = join(alias, "tools");
+		const outside = join(root, "outside");
+		const linkType = process.platform === "win32" ? "junction" : "dir";
+		await mkdir(join(physical, "repo"), { recursive: true });
+		await mkdir(join(physical, "tools"));
+		await mkdir(outside);
+		await symlink(physical, alias, linkType);
+		// Keep every input aliased so the test exposes lexical path comparisons.
+		assert.notEqual(repo, await realpath(repo));
+		await writeFile(
+			join(repo, "package.json"),
+			JSON.stringify({ scripts: { check: "node check.cjs" } })
+		);
+		await writeFile(
+			join(repo, "check.cjs"),
+			'require("node:fs").writeFileSync("artifact.txt",JSON.stringify({argv:process.argv.slice(2),cwd:process.cwd()}));console.log("alias-fixture-ran")'
+		);
+		const previous = process.env.PATH;
+		process.env.PATH = tools;
+		try {
+			for (const name of /** @type {const} */ (["npm", "pnpm"])) {
+				const version = name === "npm" ? "999.1.1" : "11.1.0";
+				const bin = name === "npm" ? "bin/npm-cli.js" : "bin/pnpm.cjs";
+				const packageRoot = join(tools, "node_modules", name);
+				const entry = join(packageRoot, bin);
+				await mkdir(join(packageRoot, "bin"), { recursive: true });
+				await writeFile(
+					join(packageRoot, "package.json"),
+					JSON.stringify({ name, version, bin: { [name]: bin } })
+				);
+				await writeFile(
+					entry,
+					'require(require("node:path").resolve("check.cjs"))'
+				);
+				await writeFile(
+					join(tools, process.platform === "win32" ? name + ".cmd" : name),
+					process.platform === "win32"
+						? '"%~dp0\\node_modules\\' +
+								name +
+								"\\" +
+								bin.replaceAll("/", "\\") +
+								'" %*'
+						: 'exec node "$basedir/node_modules/' + name + "/" + bin + '" "$@"'
+				);
+				const toolchain = { name, version, lockfile: null };
+				const resolved = await resolveTool(toolchain);
+				assert.equal(resolved.available, true, resolved.error ?? undefined);
+				assert.deepEqual(resolved.args, [await realpath(entry)]);
+				const plan = {
+					project: "fixture",
+					repoRoot: repo,
+					tasks: [
+						task(repo, name + "-alias", "", {
+							argv: [name, "run", "check"],
+							toolchain,
+							effects: ["local-write"],
+							script: "node check.cjs",
+						}),
+					],
+				};
+				let output = "";
+				const result = await runPlan(plan, {
+					allowLocalWrite: true,
+					onOutput: (_task, _stream, chunk) => {
+						output += chunk;
+					},
+				});
+				assert.equal(result.status, "success", result.error ?? output);
+				assert.equal(result.exitCode, 0);
+				assert.equal(result.tasks[0]?.status, "success");
+				assert.equal(result.tasks[0]?.exitCode, 0);
+				assert.match(output, /alias-fixture-ran/);
+				const artifact = join(repo, "artifact.txt");
+				const observed = JSON.parse(await readFile(artifact, "utf8"));
+				assert.deepEqual(observed.argv, ["run", "check"]);
+				assert.equal(observed.cwd, await realpath(repo));
+				await rm(artifact);
+				const cache = join(repo, ".cina-cache");
+				await rm(cache, { recursive: true, force: true });
+				await symlink(outside, cache, linkType);
+				const escaped = await runPlan(plan, { allowLocalWrite: true });
+				assert.equal(escaped.status, "invalid");
+				assert.equal(escaped.exitCode, 2);
+				assert.deepEqual(escaped.tasks, []);
+				assert.match(escaped.error ?? "", /Cache\/config path escapes/);
+				await assert.rejects(readFile(artifact), { code: "ENOENT" });
+				await rm(cache);
+			}
 		} finally {
 			if (previous === undefined) {
 				delete process.env.PATH;

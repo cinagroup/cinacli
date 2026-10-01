@@ -177,7 +177,8 @@ async function shimPointsTo(shim, entry) {
 		return false;
 	}
 	let content = (await readFile(shim, "utf8")).replaceAll("\\", "/");
-	let offset = relative(dirname(shim), entry).split(sep).join("/");
+	const shimDirectory = await realpath(dirname(shim));
+	let offset = relative(shimDirectory, entry).split(sep).join("/");
 	if (process.platform === "win32") {
 		content = content.toLowerCase();
 		offset = offset.toLowerCase();
@@ -477,13 +478,15 @@ async function validatePackageScript(task, root) {
 	if (!managers.has(task.toolchain.name)) {
 		return;
 	}
-	await validateFuturePath(root, join(task.cwd, ".cina-cache", "npm"));
-	const disabledConfig = join(task.cwd, ".cina-cache", "disabled-global.npmrc");
+	// Windows short paths and directory aliases must use the root's real spelling.
+	const cwd = await realpath(task.cwd);
+	await validateFuturePath(root, join(cwd, ".cina-cache", "npm"));
+	const disabledConfig = join(cwd, ".cina-cache", "disabled-global.npmrc");
 	await validateFuturePath(root, disabledConfig);
 	if (await exists(disabledConfig)) {
 		throw new Error(`${task.id}: isolated global config must remain absent`);
 	}
-	const packageFile = await realpath(join(task.cwd, "package.json"));
+	const packageFile = await realpath(join(cwd, "package.json"));
 	if (!within(root, packageFile)) {
 		throw new Error(`${task.id}: package.json escapes repository root`);
 	}
