@@ -30,10 +30,17 @@ export class MemberClient {
     }
 
     /**
-     * List memberships for an Organization. (Currently in Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+     * List memberships for an Organization.
+     *
+     * Authentication: A Global API key for a user with
+     * `com.cloudflare.api.tenant.unit.member.list` is required. User API Tokens are not currently
+     * supported.
      *
      * @param {CloudflareApi.organization.ListMemberRequest} request
      * @param {MemberClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.organization.member.list({
@@ -126,10 +133,17 @@ export class MemberClient {
     }
 
     /**
-     * Create a membership that grants access to a specific Organization. (Currently in Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+     * Create a membership that grants access to a specific Organization.
+     *
+     * Authentication: A Global API key for a user with
+     * `com.cloudflare.api.tenant.unit.member.create` is required. User API Tokens are not
+     * currently supported.
      *
      * @param {CloudflareApi.organization.OrganizationsApiCreateMemberRequest} request
      * @param {MemberClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.organization.member.create({
@@ -199,10 +213,17 @@ export class MemberClient {
     }
 
     /**
-     * Retrieve a single membership from an Organization. (Currently in Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+     * Retrieve a single membership from an Organization.
+     *
+     * Authentication: A Global API key for a user with
+     * `com.cloudflare.api.tenant.unit.member.read` is required. User API Tokens are not currently
+     * supported.
      *
      * @param {CloudflareApi.organization.GetMemberRequest} request
      * @param {MemberClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.organization.member.get({
@@ -265,10 +286,17 @@ export class MemberClient {
     }
 
     /**
-     * Delete a membership to a particular Organization. (Currently in Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+     * Delete a membership to a particular Organization.
+     *
+     * Authentication: A Global API key for a user with
+     * `com.cloudflare.api.tenant.unit.member.delete` is required. User API Tokens are not
+     * currently supported.
      *
      * @param {CloudflareApi.organization.DeleteMemberRequest} request
      * @param {MemberClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.organization.member.delete({

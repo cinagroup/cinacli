@@ -35,6 +35,9 @@ export class OrganizationClient {
      * @param {CloudflareApi.zeroTrust.GetOrganizationRequest} request
      * @param {OrganizationClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.zeroTrust.organization.get({
      *         account_or_zone: "account_or_zone",
@@ -104,12 +107,13 @@ export class OrganizationClient {
      * @param {CloudflareApi.zeroTrust.CreateOrganizationRequest} request
      * @param {OrganizationClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.zeroTrust.organization.create({
      *         account_or_zone: "account_or_zone",
-     *         account_or_zone_id: "account_or_zone_id",
-     *         auth_domain: "test.cloudflareaccess.com",
-     *         name: "Widget Corps Internal Applications"
+     *         account_or_zone_id: "account_or_zone_id"
      *     })
      */
     public create(
@@ -174,6 +178,9 @@ export class OrganizationClient {
      *
      * @param {CloudflareApi.zeroTrust.UpdateOrganizationRequest} request
      * @param {OrganizationClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.zeroTrust.organization.update({

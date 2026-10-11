@@ -24,10 +24,17 @@ export class InviteClient {
     }
 
     /**
-     * Accept or reject an invitation to a specific organization. (Currently in Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+     * Accept or reject an invitation to a specific organization.
+     *
+     * Authentication: A Global API key for the invited user is required. User API Tokens are not
+     * currently supported. No additional permission is required; the invitation must belong to
+     * the authenticated user.
      *
      * @param {CloudflareApi.organization.OrganizationsApiHandleOrganizationInviteRequest} request
      * @param {InviteClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.organization.invite.update({

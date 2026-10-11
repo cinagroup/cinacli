@@ -37,6 +37,8 @@ export class GatewaysClient {
      * @param {GatewaysClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.BadRequestError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiGateway.gateways.list({
@@ -121,6 +123,8 @@ export class GatewaysClient {
      * @param {GatewaysClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.BadRequestError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiGateway.gateways.create({
@@ -202,12 +206,14 @@ export class GatewaysClient {
      * @param {GatewaysClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.BadRequestError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiGateway.gateways.getUrl({
      *         account_id: "0d37909e38d3e99c29fa2cd343ac421a",
      *         gateway_id: "my-gateway",
-     *         provider: "workers-ai"
+     *         "ai-gateway-provider": "workers-ai"
      *     })
      */
     public getUrl(
@@ -221,7 +227,7 @@ export class GatewaysClient {
         request: CloudflareApi.aiGateway.GetUrlGatewaysRequest,
         requestOptions?: GatewaysClient.RequestOptions,
     ): Promise<core.WithRawResponse<string>> {
-        const { account_id: accountId, gateway_id: gatewayId, provider } = request;
+        const { account_id: accountId, gateway_id: gatewayId, "ai-gateway-provider": aiGatewayProvider } = request;
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
             _authRequest.headers,
@@ -233,7 +239,7 @@ export class GatewaysClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/ai-gateway/gateways/${core.url.encodePathParam(gatewayId)}/url/${core.url.encodePathParam(provider)}`,
+                `accounts/${core.url.encodePathParam(accountId)}/ai-gateway/gateways/${core.url.encodePathParam(gatewayId)}/url/${core.url.encodePathParam(aiGatewayProvider)}`,
             ),
             method: "GET",
             headers: _headers,
@@ -265,7 +271,7 @@ export class GatewaysClient {
             _response.error,
             _response.rawResponse,
             "GET",
-            "/accounts/{account_id}/ai-gateway/gateways/{gateway_id}/url/{provider}",
+            "/accounts/{account_id}/ai-gateway/gateways/{gateway_id}/url/{ai-gateway-provider}",
         );
     }
 
@@ -276,6 +282,8 @@ export class GatewaysClient {
      * @param {GatewaysClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.NotFoundError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiGateway.gateways.get({
@@ -353,6 +361,8 @@ export class GatewaysClient {
      *
      * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.NotFoundError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiGateway.gateways.update({
@@ -436,6 +446,8 @@ export class GatewaysClient {
      * @param {GatewaysClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.NotFoundError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiGateway.gateways.delete({

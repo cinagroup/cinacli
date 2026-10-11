@@ -109,6 +109,7 @@ import { PayPerCrawlClient } from "./api/resources/payPerCrawl/client/Client.js"
 import { PayPerUseClient } from "./api/resources/payPerUse/client/Client.js";
 import { PipelinesClient } from "./api/resources/pipelines/client/Client.js";
 import { PrecursorClient } from "./api/resources/precursor/client/Client.js";
+import { PreviewsClient } from "./api/resources/previews/client/Client.js";
 import { QueriesClient } from "./api/resources/queries/client/Client.js";
 import { QueuesClient } from "./api/resources/queues/client/Client.js";
 import { R2Client } from "./api/resources/r2/client/Client.js";
@@ -133,6 +134,7 @@ import { SmartShieldClient } from "./api/resources/smartShield/client/Client.js"
 import { SnippetsClient } from "./api/resources/snippets/client/Client.js";
 import { SpectrumClient } from "./api/resources/spectrum/client/Client.js";
 import { SpeedClient } from "./api/resources/speed/client/Client.js";
+import { SqlClient } from "./api/resources/sql/client/Client.js";
 import { SslClient } from "./api/resources/ssl/client/Client.js";
 import { StreamClient } from "./api/resources/stream/client/Client.js";
 import { SubmitClient } from "./api/resources/submit/client/Client.js";
@@ -181,7 +183,6 @@ export class CloudflareApiClient {
     protected _agentMemory: AgentMemoryClient | undefined;
     protected _aiSearch: AiSearchClient | undefined;
     protected _ai: AiClient | undefined;
-    protected _aiGateway: AiGatewayClient | undefined;
     protected _auditLogs: AuditLogsClient | undefined;
     protected _basinCatalog: BasinCatalogClient | undefined;
     protected _logoMatches: LogoMatchesClient | undefined;
@@ -218,7 +219,9 @@ export class CloudflareApiClient {
     protected _values: ValuesClient | undefined;
     protected _vectorize: VectorizeClient | undefined;
     protected _workers: WorkersClient | undefined;
+    protected _previews: PreviewsClient | undefined;
     protected _workflows: WorkflowsClient | undefined;
+    protected _sql: SqlClient | undefined;
     protected _originCaCertificates: OriginCaCertificatesClient | undefined;
     protected _ips: IpsClient | undefined;
     protected _oauthScopes: OauthScopesClient | undefined;
@@ -258,11 +261,13 @@ export class CloudflareApiClient {
     protected _customCsrs: CustomCsrsClient | undefined;
     protected _customPages: CustomPagesClient | undefined;
     protected _logs: LogsClient | undefined;
+    protected _rulesets: RulesetsClient | undefined;
     protected _securityInsights: SecurityInsightsClient | undefined;
     protected _accountTags: AccountTagsClient | undefined;
     protected _acm: AcmClient | undefined;
     protected _addressing: AddressingClient | undefined;
     protected _aiAudit: AiAuditClient | undefined;
+    protected _aiGateway: AiGatewayClient | undefined;
     protected _alerting: AlertingClient | undefined;
     protected _analytics: AnalyticsClient | undefined;
     protected _analyticsEngine: AnalyticsEngineClient | undefined;
@@ -317,7 +322,6 @@ export class CloudflareApiClient {
     protected _requestTracers: RequestTracersClient | undefined;
     protected _resourceTagging: ResourceTaggingClient | undefined;
     protected _rules: RulesClient | undefined;
-    protected _rulesets: RulesetsClient | undefined;
     protected _rum: RumClient | undefined;
     protected _scim: ScimClient | undefined;
     protected _secretsStore: SecretsStoreClient | undefined;
@@ -357,10 +361,6 @@ export class CloudflareApiClient {
 
     public get ai(): AiClient {
         return (this._ai ??= new AiClient(this._options));
-    }
-
-    public get aiGateway(): AiGatewayClient {
-        return (this._aiGateway ??= new AiGatewayClient(this._options));
     }
 
     public get auditLogs(): AuditLogsClient {
@@ -507,8 +507,16 @@ export class CloudflareApiClient {
         return (this._workers ??= new WorkersClient(this._options));
     }
 
+    public get previews(): PreviewsClient {
+        return (this._previews ??= new PreviewsClient(this._options));
+    }
+
     public get workflows(): WorkflowsClient {
         return (this._workflows ??= new WorkflowsClient(this._options));
+    }
+
+    public get sql(): SqlClient {
+        return (this._sql ??= new SqlClient(this._options));
     }
 
     public get originCaCertificates(): OriginCaCertificatesClient {
@@ -667,6 +675,10 @@ export class CloudflareApiClient {
         return (this._logs ??= new LogsClient(this._options));
     }
 
+    public get rulesets(): RulesetsClient {
+        return (this._rulesets ??= new RulesetsClient(this._options));
+    }
+
     public get securityInsights(): SecurityInsightsClient {
         return (this._securityInsights ??= new SecurityInsightsClient(this._options));
     }
@@ -685,6 +697,10 @@ export class CloudflareApiClient {
 
     public get aiAudit(): AiAuditClient {
         return (this._aiAudit ??= new AiAuditClient(this._options));
+    }
+
+    public get aiGateway(): AiGatewayClient {
+        return (this._aiGateway ??= new AiGatewayClient(this._options));
     }
 
     public get alerting(): AlertingClient {
@@ -903,10 +919,6 @@ export class CloudflareApiClient {
         return (this._rules ??= new RulesClient(this._options));
     }
 
-    public get rulesets(): RulesetsClient {
-        return (this._rulesets ??= new RulesetsClient(this._options));
-    }
-
     public get rum(): RumClient {
         return (this._rum ??= new RumClient(this._options));
     }
@@ -984,6 +996,8 @@ export class CloudflareApiClient {
      * @throws {@link CloudflareApi.MethodNotAllowedError}
      * @throws {@link CloudflareApi.InternalServerError}
      * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.getAccountOrZoneEntitlements({

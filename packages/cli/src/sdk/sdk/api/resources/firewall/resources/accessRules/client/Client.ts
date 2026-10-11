@@ -29,6 +29,9 @@ export class AccessRulesClient {
      * @param {CloudflareApi.firewall.ListAccessRulesRequest} request
      * @param {AccessRulesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.firewall.accessRules.list({
      *         account_or_zone: "account_or_zone",
@@ -53,7 +56,7 @@ export class AccessRulesClient {
         const {
             account_or_zone: accountOrZone,
             account_or_zone_id: accountOrZoneId,
-            mode,
+            mode: action,
             "configuration.target": configurationTarget,
             "configuration.value": configurationValue,
             notes,
@@ -64,7 +67,7 @@ export class AccessRulesClient {
             direction,
         } = request;
         const _queryParams: Record<string, unknown> = {
-            mode: mode != null ? mode : undefined,
+            mode: action != null ? action : undefined,
             "configuration.target": configurationTarget != null ? configurationTarget : undefined,
             "configuration.value": configurationValue,
             notes,
@@ -130,6 +133,9 @@ export class AccessRulesClient {
      *
      * @param {CloudflareApi.firewall.CreateAccessRulesRequest} request
      * @param {AccessRulesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.firewall.accessRules.create({
@@ -204,6 +210,9 @@ export class AccessRulesClient {
      * @param {CloudflareApi.firewall.GetAccessRulesRequest} request
      * @param {AccessRulesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.firewall.accessRules.get({
      *         account_or_zone: "account_or_zone",
@@ -272,6 +281,9 @@ export class AccessRulesClient {
      *
      * @param {CloudflareApi.firewall.DeleteAccessRulesRequest} request
      * @param {AccessRulesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.firewall.accessRules.delete({
@@ -344,6 +356,9 @@ export class AccessRulesClient {
      *
      * @param {CloudflareApi.firewall.EditAccessRulesRequest} request
      * @param {AccessRulesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.firewall.accessRules.edit({
