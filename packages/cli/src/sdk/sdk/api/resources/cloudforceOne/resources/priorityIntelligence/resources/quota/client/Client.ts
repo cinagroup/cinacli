@@ -26,10 +26,13 @@ export class QuotaClient {
     }
 
     /**
-     * Returns the account's annual PIR quota including total allowed, remaining, and anniversary dates.
+     * Returns the account's PIR quota: the entitlement limit and the number of PIRs the account can still create. Deleting a PIR frees its slot. Anniversary dates are informational.
      *
      * @param {CloudflareApi.cloudforceOne.priorityIntelligence.CreateQuotaRequest} request
      * @param {QuotaClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.priorityIntelligence.quota.create({

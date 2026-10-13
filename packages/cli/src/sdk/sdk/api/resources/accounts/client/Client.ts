@@ -35,12 +35,12 @@ export class AccountsClient {
     protected _organization: OrganizationClient | undefined;
     protected _profile: ProfileClient | undefined;
     protected _applications: ApplicationsClient | undefined;
+    protected _categories: CategoriesClient | undefined;
     protected _roles: RolesClient | undefined;
     protected _transformations: TransformationsClient | undefined;
     protected _utBilling: UtBillingClient | undefined;
     protected _subscriptions: SubscriptionsClient | undefined;
     protected _tokens: TokensClient | undefined;
-    protected _categories: CategoriesClient | undefined;
     protected _logs: LogsClient | undefined;
 
     constructor(options: AccountsClient.Options = {}) {
@@ -67,6 +67,10 @@ export class AccountsClient {
         return (this._applications ??= new ApplicationsClient(this._options));
     }
 
+    public get categories(): CategoriesClient {
+        return (this._categories ??= new CategoriesClient(this._options));
+    }
+
     public get roles(): RolesClient {
         return (this._roles ??= new RolesClient(this._options));
     }
@@ -87,10 +91,6 @@ export class AccountsClient {
         return (this._tokens ??= new TokensClient(this._options));
     }
 
-    public get categories(): CategoriesClient {
-        return (this._categories ??= new CategoriesClient(this._options));
-    }
-
     public get logs(): LogsClient {
         return (this._logs ??= new LogsClient(this._options));
     }
@@ -100,6 +100,9 @@ export class AccountsClient {
      *
      * @param {CloudflareApi.ListAccountsRequest} request
      * @param {AccountsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.accounts.list({
@@ -171,6 +174,9 @@ export class AccountsClient {
      * @param {CloudflareApi.IamCreateAccount} request
      * @param {AccountsClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.accounts.create({
      *         name: "name"
@@ -235,6 +241,9 @@ export class AccountsClient {
      * @param {CloudflareApi.GetAccountsRequest} request
      * @param {AccountsClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.accounts.get({
      *         account_id: "account_id"
@@ -294,6 +303,9 @@ export class AccountsClient {
      *
      * @param {CloudflareApi.UpdateAccountsRequest} request
      * @param {AccountsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.accounts.update({
@@ -363,6 +375,9 @@ export class AccountsClient {
      * @param {CloudflareApi.DeleteAccountsRequest} request
      * @param {AccountsClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.accounts.delete({
      *         account_id: "account_id"
@@ -423,11 +438,16 @@ export class AccountsClient {
     /**
      * Move an account into a destination organization, either assigning a standalone account
      * to an organization or moving it between organizations in the same hierarchy. Availability
-     * depends on the organization's capabilities. (Currently in Public Beta - see
-     * https://developers.cloudflare.com/fundamentals/organizations/)
+     * depends on the organization's capabilities.
+     *
+     * Authentication: A Global API key is required. User API Tokens do not include the required
+     * `com.cloudflare.api.account.move` permission.
      *
      * @param {CloudflareApi.MoveAccountsRequest} request
      * @param {AccountsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.accounts.move({

@@ -19,6 +19,7 @@ export interface UpdateOrganizationRequest {
     custom_pages?: CloudflareApi.AccessCustomPages;
     deny_unmatched_requests?: CloudflareApi.AccessDenyUnmatchedRequests;
     deny_unmatched_requests_exempted_zone_names?: CloudflareApi.AccessDenyUnmatchedRequestsExemptedZoneNames;
+    disable_end_user_app_creation?: CloudflareApi.AccessDisableEndUserAppCreation;
     is_ui_read_only?: CloudflareApi.AccessIsUiReadOnly;
     login_design?: CloudflareApi.AccessLoginDesign;
     mfa_config?: CloudflareApi.AccessOrgMfaConfig;

@@ -5,6 +5,8 @@ import * as CloudflareApi from "../index.js";
 export interface AccessInfraProps extends CloudflareApi.AccessAppRespEmbeddedTargetCriteriaInfra {
     mfa_config?: CloudflareApi.AccessInfraMfaConfig | undefined;
     name?: CloudflareApi.AccessName8 | undefined;
+    /** The maximum duration of a connection to this application's targets. Connections are terminated once it elapses. Must be in the format `30m` or `2h45m`, in whole seconds. Valid time units are: s, m, h. */
+    session_duration?: string | undefined;
     /** The application type. */
     type: AccessInfraProps.Type;
 }
@@ -13,6 +15,7 @@ export namespace AccessInfraProps {
     /** The application type. */
     export const Type = {
         SelfHosted: "self_hosted",
+        EndUser: "end_user",
         Saas: "saas",
         Ssh: "ssh",
         Vnc: "vnc",

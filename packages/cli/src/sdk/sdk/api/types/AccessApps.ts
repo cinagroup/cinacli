@@ -36,7 +36,7 @@ export namespace AccessApps {
         options_preflight_bypass?: CloudflareApi.AccessOptionsPreflightBypass2 | undefined;
         same_site_cookie_attribute?: CloudflareApi.AccessSameSiteCookieAttribute | undefined;
         service_auth_401_redirect?: CloudflareApi.AccessServiceAuth401Redirect | undefined;
-        session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+        session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
         skip_interstitial?: CloudflareApi.AccessSkipInterstitial | undefined;
         use_clientless_isolation_app_launcher_url?:
             | CloudflareApi.AccessUseClientlessIsolationAppLauncherUrl
@@ -85,7 +85,7 @@ export namespace AccessApps {
         options_preflight_bypass?: CloudflareApi.AccessOptionsPreflightBypass2 | undefined;
         same_site_cookie_attribute?: CloudflareApi.AccessSameSiteCookieAttribute | undefined;
         service_auth_401_redirect?: CloudflareApi.AccessServiceAuth401Redirect | undefined;
-        session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+        session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
         skip_interstitial?: CloudflareApi.AccessSkipInterstitial | undefined;
         use_clientless_isolation_app_launcher_url?:
             | CloudflareApi.AccessUseClientlessIsolationAppLauncherUrl
@@ -115,7 +115,7 @@ export namespace AccessApps {
         options_preflight_bypass?: CloudflareApi.AccessOptionsPreflightBypass2 | undefined;
         same_site_cookie_attribute?: CloudflareApi.AccessSameSiteCookieAttribute | undefined;
         service_auth_401_redirect?: CloudflareApi.AccessServiceAuth401Redirect | undefined;
-        session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+        session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
         skip_interstitial?: CloudflareApi.AccessSkipInterstitial | undefined;
         use_clientless_isolation_app_launcher_url?:
             | CloudflareApi.AccessUseClientlessIsolationAppLauncherUrl
@@ -133,7 +133,7 @@ export namespace AccessApps {
         auto_redirect_to_identity?: CloudflareApi.AccessAutoRedirectToIdentity2 | undefined;
         domain?: string | undefined;
         name?: string | undefined;
-        session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+        session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
     }
 
     export interface Warp {
@@ -147,7 +147,7 @@ export namespace AccessApps {
         auto_redirect_to_identity?: CloudflareApi.AccessAutoRedirectToIdentity2 | undefined;
         domain?: string | undefined;
         name?: string | undefined;
-        session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+        session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
     }
 
     export interface Biso {
@@ -161,7 +161,7 @@ export namespace AccessApps {
         auto_redirect_to_identity?: CloudflareApi.AccessAutoRedirectToIdentity2 | undefined;
         domain?: string | undefined;
         name?: string | undefined;
-        session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+        session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
     }
 
     export interface Bookmark {

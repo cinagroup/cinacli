@@ -2,13 +2,5 @@
 
 export interface RequestTracerMessagesItem {
     code: number;
-    documentation_url?: string | undefined;
     message: string;
-    source?: RequestTracerMessagesItem.Source | undefined;
-}
-
-export namespace RequestTracerMessagesItem {
-    export interface Source {
-        pointer?: string | undefined;
-    }
 }

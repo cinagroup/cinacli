@@ -44,11 +44,13 @@ export namespace AccessCentrify {
         Google: "google",
         Linkedin: "linkedin",
         Oidc: "oidc",
+        Duo: "duo",
         Okta: "okta",
         Onelogin: "onelogin",
         Pingone: "pingone",
         Yandex: "yandex",
         Cloudflare: "cloudflare",
+        Passkeys: "passkeys",
     } as const;
     export type Type = (typeof Type)[keyof typeof Type];
 }

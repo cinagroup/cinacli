@@ -27,7 +27,7 @@ export class IndicatorsClient {
     }
 
     /**
-     * Returns indicators associated with the provided tag UUID, with pagination. By default fans out across every indicator dataset the account can read; pass datasetIds to scope to UUIDs, analytics datasets, or operational datasets. Analytics datasets do not expose tag associations, so the analytics scope returns an empty result.
+     * Returns indicators associated with the provided tag UUID, with pagination. By default fans out across every intelligence (isAnalytics=false) indicator dataset the account can read; pass datasetIds to scope to dataset UUIDs or a scope value. Analytics datasets do not expose tag associations, so the analytics scope returns an empty result.
      *
      * @param {CloudflareApi.cloudforceOne.events.dataset.tags.GetIndicatorsRequest} request
      * @param {IndicatorsClient.RequestOptions} requestOptions - Request-specific configuration.
@@ -35,6 +35,8 @@ export class IndicatorsClient {
      * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.NotFoundError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.events.dataset.tags.indicators.get({

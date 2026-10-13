@@ -48,7 +48,7 @@ export interface RulesetsSetConfigRuleActionParameters {
     sxg?: boolean | undefined;
     /** Whether to serve the WebMCP bridge script, which exposes the page's tools to browser AI agents. */
     webmcp_enabled?: boolean | undefined;
-    /** Bundled WebMCP tool packs to activate for matching requests. An empty array disables all packs. Omitting this parameter leaves the pack selection unchanged. Does not enable the WebMCP bridge itself. Non-empty selections require the WebMCP Configuration Rules entitlement. */
+    /** Bundled WebMCP tool packs to activate for matching requests. An empty array disables all packs. Omitting this parameter leaves the pack selection unchanged. Does not enable the WebMCP bridge itself. */
     webmcp_packs?: string[] | undefined;
 }
 

@@ -7,6 +7,6 @@ export interface AccessFeatureAppProps2 {
     auto_redirect_to_identity?: CloudflareApi.AccessAutoRedirectToIdentity2 | undefined;
     domain?: CloudflareApi.AccessDomain3 | undefined;
     name?: CloudflareApi.AccessName8 | undefined;
-    session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+    session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
     type: CloudflareApi.AccessType3;
 }

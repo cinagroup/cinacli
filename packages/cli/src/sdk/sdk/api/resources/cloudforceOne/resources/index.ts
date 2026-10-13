@@ -7,6 +7,7 @@ export * from "./events/client/requests/index.js";
 export * from "./events/types/index.js";
 export * as priorityIntelligence from "./priorityIntelligence/index.js";
 export * from "./priorityIntelligence/client/requests/index.js";
+export * from "./priorityIntelligence/types/index.js";
 export * as requests from "./requests/index.js";
 export * from "./requests/client/requests/index.js";
 export * from "./requests/types/index.js";

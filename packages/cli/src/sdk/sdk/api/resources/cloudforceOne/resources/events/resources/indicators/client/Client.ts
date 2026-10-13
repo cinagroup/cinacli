@@ -27,12 +27,14 @@ export class IndicatorsClient {
     }
 
     /**
-     * Retrieves indicators across specified datasets, ordered by createdAt descending then UUID, dataset ID, and shard ID ascending. Use the standalone datasetIds value 'all'/'*' for legacy all-datasets behavior, 'analytics' for isAnalytics=true datasets, or 'operational' for isAnalytics=false datasets. If no datasetIds are provided, uses the default dataset.
+     * Retrieves indicators across specified datasets, ordered by createdAt descending then UUID, dataset ID, and shard ID ascending. Use one standalone datasetIds scope value: 'all'/'*' or 'operational' for readable intelligence datasets (isAnalytics=false), or 'analytics' for readable analytics datasets (isAnalytics=true). If no datasetIds are provided, uses the default dataset.
      *
      * @param {CloudflareApi.cloudforceOne.events.GetIndicatorsRequest} request
      * @param {IndicatorsClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.BadRequestError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.events.indicators.get({

@@ -6,6 +6,7 @@ export type ResourceTaggingTaggedResourceObject =
     | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessApplication
     | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessApplicationPolicy
     | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessGroup
+    | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessServiceToken
     | CloudflareApi.ResourceTaggingTaggedResourceObject.Account
     | CloudflareApi.ResourceTaggingTaggedResourceObject.AccountRuleset
     | CloudflareApi.ResourceTaggingTaggedResourceObject.AiGateway
@@ -20,6 +21,7 @@ export type ResourceTaggingTaggedResourceObject =
     | CloudflareApi.ResourceTaggingTaggedResourceObject.CwsPolicySet
     | CloudflareApi.ResourceTaggingTaggedResourceObject.CwsWorkload
     | CloudflareApi.ResourceTaggingTaggedResourceObject.D1Database
+    | CloudflareApi.ResourceTaggingTaggedResourceObject.Device
     | CloudflareApi.ResourceTaggingTaggedResourceObject.DnsRecord
     | CloudflareApi.ResourceTaggingTaggedResourceObject.DurableObjectNamespace
     | CloudflareApi.ResourceTaggingTaggedResourceObject.GatewayList
@@ -32,6 +34,7 @@ export type ResourceTaggingTaggedResourceObject =
     | CloudflareApi.ResourceTaggingTaggedResourceObject.LoadBalancerMonitor
     | CloudflareApi.ResourceTaggingTaggedResourceObject.LoadBalancerPool
     | CloudflareApi.ResourceTaggingTaggedResourceObject.ManagedClientCertificate
+    | CloudflareApi.ResourceTaggingTaggedResourceObject.NamespaceWorker
     | CloudflareApi.ResourceTaggingTaggedResourceObject.PagesProject
     | CloudflareApi.ResourceTaggingTaggedResourceObject.Queue
     | CloudflareApi.ResourceTaggingTaggedResourceObject.R2Bucket
@@ -57,6 +60,10 @@ export namespace ResourceTaggingTaggedResourceObject {
 
     export interface AccessGroup extends CloudflareApi.ResourceTaggingTaggedResourceObjectAccessGroup {
         type: "access_group";
+    }
+
+    export interface AccessServiceToken extends CloudflareApi.ResourceTaggingTaggedResourceObjectAccessServiceToken {
+        type: "access_service_token";
     }
 
     export interface Account extends CloudflareApi.ResourceTaggingTaggedResourceObjectAccount {
@@ -115,6 +122,10 @@ export namespace ResourceTaggingTaggedResourceObject {
         type: "d1_database";
     }
 
+    export interface Device extends CloudflareApi.ResourceTaggingTaggedResourceObjectDevice {
+        type: "device";
+    }
+
     export interface DnsRecord extends CloudflareApi.ResourceTaggingTaggedResourceObjectDnsRecord {
         type: "dns_record";
     }
@@ -164,6 +175,10 @@ export namespace ResourceTaggingTaggedResourceObject {
     export interface ManagedClientCertificate
         extends CloudflareApi.ResourceTaggingTaggedResourceObjectManagedClientCertificate {
         type: "managed_client_certificate";
+    }
+
+    export interface NamespaceWorker extends CloudflareApi.ResourceTaggingTaggedResourceObjectNamespaceWorker {
+        type: "namespace_worker";
     }
 
     export interface PagesProject extends CloudflareApi.ResourceTaggingTaggedResourceObjectPagesProject {
@@ -218,6 +233,7 @@ export namespace ResourceTaggingTaggedResourceObject {
         | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessApplication
         | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessApplicationPolicy
         | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessGroup
+        | CloudflareApi.ResourceTaggingTaggedResourceObject.AccessServiceToken
         | CloudflareApi.ResourceTaggingTaggedResourceObject.Account
         | CloudflareApi.ResourceTaggingTaggedResourceObject.AccountRuleset
         | CloudflareApi.ResourceTaggingTaggedResourceObject.AiGateway
@@ -232,6 +248,7 @@ export namespace ResourceTaggingTaggedResourceObject {
         | CloudflareApi.ResourceTaggingTaggedResourceObject.CwsPolicySet
         | CloudflareApi.ResourceTaggingTaggedResourceObject.CwsWorkload
         | CloudflareApi.ResourceTaggingTaggedResourceObject.D1Database
+        | CloudflareApi.ResourceTaggingTaggedResourceObject.Device
         | CloudflareApi.ResourceTaggingTaggedResourceObject.DnsRecord
         | CloudflareApi.ResourceTaggingTaggedResourceObject.DurableObjectNamespace
         | CloudflareApi.ResourceTaggingTaggedResourceObject.GatewayList
@@ -244,6 +261,7 @@ export namespace ResourceTaggingTaggedResourceObject {
         | CloudflareApi.ResourceTaggingTaggedResourceObject.LoadBalancerMonitor
         | CloudflareApi.ResourceTaggingTaggedResourceObject.LoadBalancerPool
         | CloudflareApi.ResourceTaggingTaggedResourceObject.ManagedClientCertificate
+        | CloudflareApi.ResourceTaggingTaggedResourceObject.NamespaceWorker
         | CloudflareApi.ResourceTaggingTaggedResourceObject.PagesProject
         | CloudflareApi.ResourceTaggingTaggedResourceObject.Queue
         | CloudflareApi.ResourceTaggingTaggedResourceObject.R2Bucket

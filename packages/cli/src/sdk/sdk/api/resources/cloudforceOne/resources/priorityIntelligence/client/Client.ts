@@ -11,6 +11,7 @@ import * as errors from "../../../../../../errors/index.js";
 import type * as CloudflareApi from "../../../../../index.js";
 import * as CloudflareApiErrors from "../../../../../errors/index.js";
 import { ConstantsClient } from "../resources/constants/client/Client.js";
+import { FiltersClient } from "../resources/filters/client/Client.js";
 import { InterestsClient } from "../resources/interests/client/Client.js";
 import { QuotaClient } from "../resources/quota/client/Client.js";
 
@@ -23,6 +24,7 @@ export declare namespace PriorityIntelligenceClient {
 export class PriorityIntelligenceClient {
     protected readonly _options: NormalizedClientOptionsWithAuth<PriorityIntelligenceClient.Options>;
     protected _constants: ConstantsClient | undefined;
+    protected _filters: FiltersClient | undefined;
     protected _interests: InterestsClient | undefined;
     protected _quota: QuotaClient | undefined;
 
@@ -32,6 +34,10 @@ export class PriorityIntelligenceClient {
 
     public get constants(): ConstantsClient {
         return (this._constants ??= new ConstantsClient(this._options));
+    }
+
+    public get filters(): FiltersClient {
+        return (this._filters ??= new FiltersClient(this._options));
     }
 
     public get interests(): InterestsClient {
@@ -47,6 +53,9 @@ export class PriorityIntelligenceClient {
      *
      * @param {CloudflareApi.cloudforceOne.ListPriorityIntelligenceRequest} request
      * @param {PriorityIntelligenceClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.priorityIntelligence.list({
@@ -116,13 +125,16 @@ export class PriorityIntelligenceClient {
     }
 
     /**
-     * Creates a new PIR for the account. Subject to the account's annual PIR quota from the cfone.priority_intelligence_requirement_limit entitlement.
+     * Creates a new PIR for the account. The account may hold at most the number of PIRs set by the cfone.priority_intelligence_requirement_limit entitlement. An active PIR requires a query.
      *
      * @param {CloudflareApi.cloudforceOne.CreatePriorityIntelligenceRequest} request
      * @param {PriorityIntelligenceClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.ForbiddenError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.priorityIntelligence.create({
@@ -173,6 +185,8 @@ export class PriorityIntelligenceClient {
 
         if (_response.error.reason === "status-code") {
             switch (_response.error.statusCode) {
+                case 400:
+                    throw new CloudflareApiErrors.BadRequestError(_response.error.body as unknown, _response.rawResponse);
                 case 403:
                     throw new CloudflareApiErrors.ForbiddenError(_response.error.body as unknown, _response.rawResponse);
                 case 429:
@@ -204,6 +218,8 @@ export class PriorityIntelligenceClient {
      * @param {PriorityIntelligenceClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.NotFoundError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.priorityIntelligence.get({
@@ -271,12 +287,16 @@ export class PriorityIntelligenceClient {
     }
 
     /**
-     * Updates a free-form Priority Intelligence Requirement for the authenticated account.
+     * Updates a Priority Intelligence Requirement for the authenticated account. Changing the query increments its version; editing the requirement without saving a query marks the query stale.
      *
      * @param {CloudflareApi.cloudforceOne.UpdatePriorityIntelligenceRequest} request
      * @param {PriorityIntelligenceClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.NotFoundError}
+     * @throws {@link CloudflareApi.ConflictError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.priorityIntelligence.update({
@@ -327,8 +347,12 @@ export class PriorityIntelligenceClient {
 
         if (_response.error.reason === "status-code") {
             switch (_response.error.statusCode) {
+                case 400:
+                    throw new CloudflareApiErrors.BadRequestError(_response.error.body as unknown, _response.rawResponse);
                 case 404:
                     throw new CloudflareApiErrors.NotFoundError(_response.error.body as unknown, _response.rawResponse);
+                case 409:
+                    throw new CloudflareApiErrors.ConflictError(_response.error.body as unknown, _response.rawResponse);
                 default:
                     throw new errors.CloudflareApiError({
                         statusCode: _response.error.statusCode,
@@ -353,6 +377,8 @@ export class PriorityIntelligenceClient {
      * @param {PriorityIntelligenceClient.RequestOptions} requestOptions - Request-specific configuration.
      *
      * @throws {@link CloudflareApi.NotFoundError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.priorityIntelligence.delete({

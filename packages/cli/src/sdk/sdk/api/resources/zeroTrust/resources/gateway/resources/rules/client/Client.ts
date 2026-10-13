@@ -32,6 +32,9 @@ export class RulesClient {
      * @param {CloudflareApi.zeroTrust.gateway.ListRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.zeroTrust.gateway.rules.list({
      *         account_id: "account_id"
@@ -110,6 +113,9 @@ export class RulesClient {
      * @param {CloudflareApi.zeroTrust.gateway.CreateRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.zeroTrust.gateway.rules.create({
      *         account_id: "account_id",
@@ -175,84 +181,13 @@ export class RulesClient {
     }
 
     /**
-     * Update select fields of multiple Zero Trust Gateway rules in a single request. This is commonly used to reorder rules by updating their precedence values. Only the fields provided for each rule are updated.
-     *
-     * @param {CloudflareApi.zeroTrust.gateway.BulkEditRulesRequest} request
-     * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
-     *
-     * @example
-     *     await client.zeroTrust.gateway.rules.bulkEdit({
-     *         account_id: "account_id",
-     *         body: [{
-     *                 id: "f174e90a-fafe-4643-bbbc-4a0ed4fc8415"
-     *             }]
-     *     })
-     */
-    public bulkEdit(
-        request: CloudflareApi.zeroTrust.gateway.BulkEditRulesRequest,
-        requestOptions?: RulesClient.RequestOptions,
-    ): core.HttpResponsePromise<CloudflareApi.zeroTrust.gateway.BulkEditRulesResponse> {
-        return core.HttpResponsePromise.fromPromise(this.__bulkEdit(request, requestOptions));
-    }
-
-    private async __bulkEdit(
-        request: CloudflareApi.zeroTrust.gateway.BulkEditRulesRequest,
-        requestOptions?: RulesClient.RequestOptions,
-    ): Promise<core.WithRawResponse<CloudflareApi.zeroTrust.gateway.BulkEditRulesResponse>> {
-        const { account_id: accountId, body: _body } = request;
-        const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
-        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
-            _authRequest.headers,
-            this._options?.headers,
-            requestOptions?.headers,
-        );
-        const _response = await (this._options.fetcher ?? core.fetcher)({
-            url: core.url.join(
-                (await core.Supplier.get(this._options.baseUrl)) ??
-                    (await core.Supplier.get(this._options.environment)) ??
-                    environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/gateway/rules`,
-            ),
-            method: "PATCH",
-            headers: _headers,
-            contentType: "application/json",
-            queryString: core.url.queryBuilder().mergeAdditional(requestOptions?.queryParams).build(),
-            requestType: "json",
-            body: mergeAdditionalBodyParameters(_body, requestOptions?.additionalBodyParameters),
-            timeoutMs: (requestOptions?.timeoutInSeconds ?? this._options?.timeoutInSeconds ?? 60) * 1000,
-            maxRetries: requestOptions?.maxRetries ?? this._options?.maxRetries,
-            abortSignal: requestOptions?.abortSignal,
-            fetchFn: this._options?.fetch,
-            logging: this._options.logging,
-        });
-        if (_response.ok) {
-            return {
-                data: _response.body as CloudflareApi.zeroTrust.gateway.BulkEditRulesResponse,
-                rawResponse: _response.rawResponse,
-            };
-        }
-
-        if (_response.error.reason === "status-code") {
-            throw new errors.CloudflareApiError({
-                statusCode: _response.error.statusCode,
-                body: _response.error.body,
-                rawResponse: _response.rawResponse,
-            });
-        }
-
-        return handleNonStatusCodeError(
-            _response.error,
-            _response.rawResponse,
-            "PATCH",
-            "/accounts/{account_id}/gateway/rules",
-        );
-    }
-
-    /**
      * List Zero Trust Gateway rules for the parent account of an account in the MSP configuration.
      *
      * @param {CloudflareApi.zeroTrust.gateway.ListTenantRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.zeroTrust.gateway.rules.listTenant({
@@ -322,6 +257,9 @@ export class RulesClient {
      * @param {CloudflareApi.zeroTrust.gateway.GetRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.zeroTrust.gateway.rules.get({
      *         account_id: "account_id",
@@ -387,6 +325,9 @@ export class RulesClient {
      *
      * @param {CloudflareApi.zeroTrust.gateway.UpdateRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.zeroTrust.gateway.rules.update({
@@ -459,6 +400,9 @@ export class RulesClient {
      * @param {CloudflareApi.zeroTrust.gateway.DeleteRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
      *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
+     *
      * @example
      *     await client.zeroTrust.gateway.rules.delete({
      *         account_id: "account_id",
@@ -520,79 +464,13 @@ export class RulesClient {
     }
 
     /**
-     * Update select fields of an existing Zero Trust Gateway rule. Only the fields provided in the request body are updated. This endpoint supports a limited subset of fields (`name`, `description`, `precedence`, `enabled`). To update other fields such as `action`, `traffic`, `identity`, `device_posture`, `rule_settings`, `schedule`, or `expiration`, use the PUT endpoint for a full rule replacement.
-     *
-     * @param {CloudflareApi.zeroTrust.gateway.EditRulesRequest} request
-     * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
-     *
-     * @example
-     *     await client.zeroTrust.gateway.rules.edit({
-     *         account_id: "account_id",
-     *         rule_id: "rule_id"
-     *     })
-     */
-    public edit(
-        request: CloudflareApi.zeroTrust.gateway.EditRulesRequest,
-        requestOptions?: RulesClient.RequestOptions,
-    ): core.HttpResponsePromise<CloudflareApi.ZeroTrustGatewayRules> {
-        return core.HttpResponsePromise.fromPromise(this.__edit(request, requestOptions));
-    }
-
-    private async __edit(
-        request: CloudflareApi.zeroTrust.gateway.EditRulesRequest,
-        requestOptions?: RulesClient.RequestOptions,
-    ): Promise<core.WithRawResponse<CloudflareApi.ZeroTrustGatewayRules>> {
-        const { account_id: accountId, rule_id: ruleId, ..._body } = request;
-        const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
-        let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
-            _authRequest.headers,
-            this._options?.headers,
-            requestOptions?.headers,
-        );
-        const _response = await (this._options.fetcher ?? core.fetcher)({
-            url: core.url.join(
-                (await core.Supplier.get(this._options.baseUrl)) ??
-                    (await core.Supplier.get(this._options.environment)) ??
-                    environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/gateway/rules/${core.url.encodePathParam(ruleId)}`,
-            ),
-            method: "PATCH",
-            headers: _headers,
-            contentType: "application/json",
-            queryString: core.url.queryBuilder().mergeAdditional(requestOptions?.queryParams).build(),
-            requestType: "json",
-            body: mergeAdditionalBodyParameters(_body, requestOptions?.additionalBodyParameters),
-            timeoutMs: (requestOptions?.timeoutInSeconds ?? this._options?.timeoutInSeconds ?? 60) * 1000,
-            maxRetries: requestOptions?.maxRetries ?? this._options?.maxRetries,
-            abortSignal: requestOptions?.abortSignal,
-            fetchFn: this._options?.fetch,
-            logging: this._options.logging,
-        });
-        if (_response.ok) {
-            return { data: _response.body as CloudflareApi.ZeroTrustGatewayRules, rawResponse: _response.rawResponse };
-        }
-
-        if (_response.error.reason === "status-code") {
-            throw new errors.CloudflareApiError({
-                statusCode: _response.error.statusCode,
-                body: _response.error.body,
-                rawResponse: _response.rawResponse,
-            });
-        }
-
-        return handleNonStatusCodeError(
-            _response.error,
-            _response.rawResponse,
-            "PATCH",
-            "/accounts/{account_id}/gateway/rules/{rule_id}",
-        );
-    }
-
-    /**
      * Resets the expiration of a Zero Trust Gateway Rule if its duration elapsed and it has a default duration. The Zero Trust Gateway Rule must have values  for both `expiration.expires_at` and `expiration.duration`.
      *
      * @param {CloudflareApi.zeroTrust.gateway.ResetExpirationRulesRequest} request
      * @param {RulesClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.zeroTrust.gateway.rules.resetExpiration({

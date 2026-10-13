@@ -11,10 +11,12 @@ export type AccessIdentityProviders =
     | CloudflareApi.AccessGoogleApps
     | CloudflareApi.AccessLinkedin
     | CloudflareApi.AccessOidc
+    | CloudflareApi.AccessDuo
     | CloudflareApi.AccessOkta
     | CloudflareApi.AccessOnelogin
     | CloudflareApi.AccessPingone
     | CloudflareApi.AccessSaml
     | CloudflareApi.AccessYandex
     | CloudflareApi.AccessOnetimepin
-    | CloudflareApi.AccessCloudflare;
+    | CloudflareApi.AccessCloudflare
+    | CloudflareApi.AccessPasskeys;

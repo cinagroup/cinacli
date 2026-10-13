@@ -12,6 +12,7 @@ export interface AccessOrganizations {
     deny_unmatched_requests_exempted_zone_names?:
         | CloudflareApi.AccessDenyUnmatchedRequestsExemptedZoneNames
         | undefined;
+    disable_end_user_app_creation?: CloudflareApi.AccessDisableEndUserAppCreation | undefined;
     is_ui_read_only?: CloudflareApi.AccessIsUiReadOnly | undefined;
     login_design?: CloudflareApi.AccessLoginDesign | undefined;
     mfa_config?: CloudflareApi.AccessOrgMfaConfig | undefined;

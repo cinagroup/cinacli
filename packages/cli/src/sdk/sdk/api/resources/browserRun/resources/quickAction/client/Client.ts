@@ -34,6 +34,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.accessibilityTree({
@@ -54,9 +56,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.AccessibilityTreeQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.browserRun.AccessibilityTreeQuickActionResponse>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -137,6 +140,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.content({
@@ -157,9 +162,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.ContentQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<string>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -237,6 +243,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.json({
@@ -257,9 +265,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.JsonQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<Record<string, Record<string, unknown> | null>>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -340,6 +349,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.links({
@@ -360,9 +371,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.LinksQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.browserRun.LinksQuickActionResponse>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -443,6 +455,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.markdown({
@@ -463,9 +477,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.MarkdownQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<string>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -540,6 +555,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      */
     public pdf(
         request: CloudflareApi.browserRun.PdfQuickActionRequest,
@@ -552,9 +569,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.PdfQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<core.BinaryResponse>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -633,6 +651,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.scrape({
@@ -656,9 +676,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.ScrapeQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.browserRun.ScrapeQuickActionResponse>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -739,6 +760,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.screenshot({
@@ -759,9 +782,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.ScreenshotQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.browserRun.ScreenshotQuickActionResponse>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -842,6 +866,8 @@ export class QuickActionClient {
      * @throws {@link CloudflareApi.UnprocessableEntityError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.InternalServerError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.browserRun.quickAction.snapshot({
@@ -863,9 +889,10 @@ export class QuickActionClient {
         request: CloudflareApi.browserRun.SnapshotQuickActionRequest,
         requestOptions?: QuickActionClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.browserRun.SnapshotQuickActionResponse>> {
-        const { account_id: accountId, cacheTTL: cacheTtl, body: _body } = request;
+        const { account_id: accountId, cacheTTL: cacheTtl, browser, body: _body } = request;
         const _queryParams: Record<string, unknown> = {
             cacheTTL: cacheTtl,
+            browser: browser != null ? browser : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(

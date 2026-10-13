@@ -37,6 +37,7 @@ export namespace AccessOidc2 {
         Google: "google",
         Linkedin: "linkedin",
         Oidc: "oidc",
+        Duo: "duo",
         Okta: "okta",
         Onelogin: "onelogin",
         Pingone: "pingone",

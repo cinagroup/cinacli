@@ -24,10 +24,19 @@ export class ProfileClient {
     }
 
     /**
-     * Retrieves the business profile (name, email, phone, address, and external metadata) associated with this account's parent organization customer record. Profiles can be shared across accounts and organizations. Only available to members of an organization that contains the account.
+     * Retrieves the business profile (name, email, phone, address, and external metadata)
+     * associated with this account's parent organization customer record. Profiles can be shared
+     * across accounts and organizations. Only available to members of an organization that
+     * contains the account.
+     *
+     * Authentication: Use a Global API key, or a user-owned API Token scoped to the account with
+     * the `Account Settings Read` permission, which grants `com.cloudflare.api.account.read`.
      *
      * @param {CloudflareApi.accounts.GetProfileRequest} request
      * @param {ProfileClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.accounts.profile.get({
@@ -92,10 +101,20 @@ export class ProfileClient {
     }
 
     /**
-     * Updates the business profile (name, email, phone, address, and external metadata) associated with this account's parent organization customer record. Changes apply to every account and organization sharing that profile. Omitted or empty fields are left unchanged. Only available to members of an organization that contains the account. Requires Account Settings Write permission.
+     * Updates the business profile (name, email, phone, address, and external metadata) associated
+     * with this account's parent organization customer record. Changes apply to every account and
+     * organization sharing that profile. Omitted or empty fields are left unchanged. Only
+     * available to members of an organization that contains the account.
+     *
+     * Authentication: Use a Global API key, or a user-owned API Token scoped to the account with
+     * the `Account Settings Write` permission, which grants
+     * `com.cloudflare.api.account.update`.
      *
      * @param {CloudflareApi.accounts.UpdateProfileRequest} request
      * @param {ProfileClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.accounts.profile.update({

@@ -19,7 +19,7 @@ export interface AccessSelfHostedProps2 {
     options_preflight_bypass?: CloudflareApi.AccessOptionsPreflightBypass2 | undefined;
     same_site_cookie_attribute?: CloudflareApi.AccessSameSiteCookieAttribute | undefined;
     service_auth_401_redirect?: CloudflareApi.AccessServiceAuth401Redirect | undefined;
-    session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+    session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
     skip_interstitial?: CloudflareApi.AccessSkipInterstitial | undefined;
     /** The application type. */
     type: string;

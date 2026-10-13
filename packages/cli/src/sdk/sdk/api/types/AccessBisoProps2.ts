@@ -7,7 +7,7 @@ export interface AccessBisoProps2 {
     auto_redirect_to_identity?: CloudflareApi.AccessAutoRedirectToIdentity2 | undefined;
     domain?: string | undefined;
     name?: string | undefined;
-    session_duration?: CloudflareApi.AccessSessionDuration4 | undefined;
+    session_duration?: CloudflareApi.AccessSessionDuration2 | undefined;
     /** The application type. */
     type: string;
 }

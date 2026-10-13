@@ -33,12 +33,14 @@ export class JobsClient {
      * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.NotFoundError}
      * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiSearch.jobs.list({
      *         account_id: "c3dc5f0b34a14ff8e1b3ec04895e1b22",
-     *         name: "my-namespace",
-     *         id: "my-ai-search"
+     *         namespace: "my-namespace",
+     *         "instance-id": "my-ai-search"
      *     })
      */
     public list(
@@ -52,7 +54,7 @@ export class JobsClient {
         request: CloudflareApi.aiSearch.ListJobsRequest,
         requestOptions?: JobsClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.aiSearch.ListJobsResponse>> {
-        const { account_id: accountId, name, id, page, per_page: perPage } = request;
+        const { account_id: accountId, namespace, "instance-id": instanceId, page, per_page: perPage } = request;
         const _queryParams: Record<string, unknown> = {
             page,
             per_page: perPage,
@@ -68,7 +70,7 @@ export class JobsClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(name)}/instances/${core.url.encodePathParam(id)}/jobs`,
+                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(namespace)}/instances/${core.url.encodePathParam(instanceId)}/jobs`,
             ),
             method: "GET",
             headers: _headers,
@@ -114,7 +116,7 @@ export class JobsClient {
             _response.error,
             _response.rawResponse,
             "GET",
-            "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs",
+            "/accounts/{account_id}/ai-search/namespaces/{namespace}/instances/{instance-id}/jobs",
         );
     }
 
@@ -128,12 +130,14 @@ export class JobsClient {
      * @throws {@link CloudflareApi.NotFoundError}
      * @throws {@link CloudflareApi.TooManyRequestsError}
      * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiSearch.jobs.create({
      *         account_id: "c3dc5f0b34a14ff8e1b3ec04895e1b22",
-     *         name: "my-namespace",
-     *         id: "my-ai-search"
+     *         namespace: "my-namespace",
+     *         "instance-id": "my-ai-search"
      *     })
      */
     public create(
@@ -147,7 +151,7 @@ export class JobsClient {
         request: CloudflareApi.aiSearch.CreateJobsRequest,
         requestOptions?: JobsClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.aiSearch.CreateJobsResponse>> {
-        const { account_id: accountId, name, id, ..._body } = request;
+        const { account_id: accountId, namespace, "instance-id": instanceId, ..._body } = request;
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
             _authRequest.headers,
@@ -159,7 +163,7 @@ export class JobsClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(name)}/instances/${core.url.encodePathParam(id)}/jobs`,
+                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(namespace)}/instances/${core.url.encodePathParam(instanceId)}/jobs`,
             ),
             method: "POST",
             headers: _headers,
@@ -209,7 +213,7 @@ export class JobsClient {
             _response.error,
             _response.rawResponse,
             "POST",
-            "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs",
+            "/accounts/{account_id}/ai-search/namespaces/{namespace}/instances/{instance-id}/jobs",
         );
     }
 
@@ -221,12 +225,14 @@ export class JobsClient {
      *
      * @throws {@link CloudflareApi.NotFoundError}
      * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiSearch.jobs.get({
      *         account_id: "c3dc5f0b34a14ff8e1b3ec04895e1b22",
-     *         name: "my-namespace",
-     *         id: "my-ai-search",
+     *         namespace: "my-namespace",
+     *         "instance-id": "my-ai-search",
      *         job_id: "job_id"
      *     })
      */
@@ -241,7 +247,7 @@ export class JobsClient {
         request: CloudflareApi.aiSearch.GetJobsRequest,
         requestOptions?: JobsClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.aiSearch.GetJobsResponse>> {
-        const { account_id: accountId, name, id, job_id: jobId } = request;
+        const { account_id: accountId, namespace, "instance-id": instanceId, job_id: jobId } = request;
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
             _authRequest.headers,
@@ -253,7 +259,7 @@ export class JobsClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(name)}/instances/${core.url.encodePathParam(id)}/jobs/${core.url.encodePathParam(jobId)}`,
+                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(namespace)}/instances/${core.url.encodePathParam(instanceId)}/jobs/${core.url.encodePathParam(jobId)}`,
             ),
             method: "GET",
             headers: _headers,
@@ -293,7 +299,7 @@ export class JobsClient {
             _response.error,
             _response.rawResponse,
             "GET",
-            "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{job_id}",
+            "/accounts/{account_id}/ai-search/namespaces/{namespace}/instances/{instance-id}/jobs/{job_id}",
         );
     }
 
@@ -306,12 +312,14 @@ export class JobsClient {
      * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.NotFoundError}
      * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiSearch.jobs.cancel({
      *         account_id: "c3dc5f0b34a14ff8e1b3ec04895e1b22",
-     *         name: "my-namespace",
-     *         id: "my-ai-search",
+     *         namespace: "my-namespace",
+     *         "instance-id": "my-ai-search",
      *         job_id: "job_id"
      *     })
      */
@@ -326,7 +334,7 @@ export class JobsClient {
         request: CloudflareApi.aiSearch.CancelJobsRequest,
         requestOptions?: JobsClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.aiSearch.CancelJobsResponse>> {
-        const { account_id: accountId, name, id, job_id: jobId, ..._body } = request;
+        const { account_id: accountId, namespace, "instance-id": instanceId, job_id: jobId, ..._body } = request;
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
             _authRequest.headers,
@@ -338,7 +346,7 @@ export class JobsClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(name)}/instances/${core.url.encodePathParam(id)}/jobs/${core.url.encodePathParam(jobId)}`,
+                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(namespace)}/instances/${core.url.encodePathParam(instanceId)}/jobs/${core.url.encodePathParam(jobId)}`,
             ),
             method: "PATCH",
             headers: _headers,
@@ -386,7 +394,7 @@ export class JobsClient {
             _response.error,
             _response.rawResponse,
             "PATCH",
-            "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{job_id}",
+            "/accounts/{account_id}/ai-search/namespaces/{namespace}/instances/{instance-id}/jobs/{job_id}",
         );
     }
 
@@ -399,12 +407,14 @@ export class JobsClient {
      * @throws {@link CloudflareApi.BadRequestError}
      * @throws {@link CloudflareApi.NotFoundError}
      * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.aiSearch.jobs.logs({
      *         account_id: "c3dc5f0b34a14ff8e1b3ec04895e1b22",
-     *         name: "my-namespace",
-     *         id: "my-ai-search",
+     *         namespace: "my-namespace",
+     *         "instance-id": "my-ai-search",
      *         job_id: "job_id"
      *     })
      */
@@ -419,7 +429,14 @@ export class JobsClient {
         request: CloudflareApi.aiSearch.LogsJobsRequest,
         requestOptions?: JobsClient.RequestOptions,
     ): Promise<core.WithRawResponse<CloudflareApi.aiSearch.LogsJobsResponse>> {
-        const { account_id: accountId, name, id, job_id: jobId, page, per_page: perPage } = request;
+        const {
+            account_id: accountId,
+            namespace,
+            "instance-id": instanceId,
+            job_id: jobId,
+            page,
+            per_page: perPage,
+        } = request;
         const _queryParams: Record<string, unknown> = {
             page,
             per_page: perPage,
@@ -435,7 +452,7 @@ export class JobsClient {
                 (await core.Supplier.get(this._options.baseUrl)) ??
                     (await core.Supplier.get(this._options.environment)) ??
                     environments.CloudflareApiEnvironment.Default,
-                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(name)}/instances/${core.url.encodePathParam(id)}/jobs/${core.url.encodePathParam(jobId)}/logs`,
+                `accounts/${core.url.encodePathParam(accountId)}/ai-search/namespaces/${core.url.encodePathParam(namespace)}/instances/${core.url.encodePathParam(instanceId)}/jobs/${core.url.encodePathParam(jobId)}/logs`,
             ),
             method: "GET",
             headers: _headers,
@@ -481,7 +498,7 @@ export class JobsClient {
             _response.error,
             _response.rawResponse,
             "GET",
-            "/accounts/{account_id}/ai-search/namespaces/{name}/instances/{id}/jobs/{job_id}/logs",
+            "/accounts/{account_id}/ai-search/namespaces/{namespace}/instances/{instance-id}/jobs/{job_id}/logs",
         );
     }
 }

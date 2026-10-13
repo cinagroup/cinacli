@@ -8,6 +8,7 @@ import * as CloudflareApi from "../index.js";
 export type ResourceTaggingDeleteTagsRequestAccountLevel =
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.AccessApplication
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.AccessGroup
+    | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.AccessServiceToken
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.Account
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.AccountRuleset
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.AiGateway
@@ -19,6 +20,7 @@ export type ResourceTaggingDeleteTagsRequestAccountLevel =
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.CwsPolicySet
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.CwsWorkload
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.D1Database
+    | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.Device
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.DurableObjectNamespace
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.GatewayList
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.GatewayRule
@@ -27,6 +29,7 @@ export type ResourceTaggingDeleteTagsRequestAccountLevel =
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.KvNamespace
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.LoadBalancerMonitor
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.LoadBalancerPool
+    | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.NamespaceWorker
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.PagesProject
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.Queue
     | CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevel.R2Bucket
@@ -44,6 +47,10 @@ export namespace ResourceTaggingDeleteTagsRequestAccountLevel {
 
     export interface AccessGroup extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
         resource_type: "access_group";
+    }
+
+    export interface AccessServiceToken extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
+        resource_type: "access_service_token";
     }
 
     export interface Account extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
@@ -90,6 +97,10 @@ export namespace ResourceTaggingDeleteTagsRequestAccountLevel {
         resource_type: "d1_database";
     }
 
+    export interface Device extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
+        resource_type: "device";
+    }
+
     export interface DurableObjectNamespace extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
         resource_type: "durable_object_namespace";
     }
@@ -120,6 +131,10 @@ export namespace ResourceTaggingDeleteTagsRequestAccountLevel {
 
     export interface LoadBalancerPool extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
         resource_type: "load_balancer_pool";
+    }
+
+    export interface NamespaceWorker extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {
+        resource_type: "namespace_worker";
     }
 
     export interface PagesProject extends CloudflareApi.ResourceTaggingDeleteTagsRequestAccountLevelBase {

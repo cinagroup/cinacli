@@ -11,6 +11,9 @@ export interface AccessServiceTokens2 {
     /** The ID of the service token. */
     id?: string | undefined;
     last_seen_at?: CloudflareApi.AccessTimestamp | undefined;
+    leak_report_url?: CloudflareApi.AccessLeakReportUrl | undefined;
+    leak_reported_at?: CloudflareApi.AccessLeakReportedAt | undefined;
+    leak_reporter?: CloudflareApi.AccessLeakReporter | undefined;
     name?: CloudflareApi.AccessName17 | undefined;
     updated_at?: CloudflareApi.AccessTimestamp | undefined;
 }

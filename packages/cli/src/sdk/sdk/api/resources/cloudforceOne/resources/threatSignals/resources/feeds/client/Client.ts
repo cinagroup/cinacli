@@ -7,11 +7,13 @@ import {
 } from "../../../../../../../../BaseClient.js";
 import * as core from "../../../../../../../../core/index.js";
 import { mergeHeaders } from "../../../../../../../../core/headers.js";
+import { toJson } from "../../../../../../../../core/json.js";
 import { mergeAdditionalBodyParameters } from "../../../../../../../../core/requestBody.js";
 import * as environments from "../../../../../../../../environments.js";
 import { handleNonStatusCodeError } from "../../../../../../../../errors/handleNonStatusCodeError.js";
 import * as errors from "../../../../../../../../errors/index.js";
 import type * as CloudflareApi from "../../../../../../../index.js";
+import * as CloudflareApiErrors from "../../../../../../../errors/index.js";
 import { SkillsClient } from "../resources/skills/client/Client.js";
 
 export declare namespace FeedsClient {
@@ -37,6 +39,10 @@ export class FeedsClient {
      *
      * @param {CloudflareApi.cloudforceOne.threatSignals.ListFeedsRequest} request
      * @param {FeedsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.threatSignals.feeds.list({
@@ -109,11 +115,19 @@ export class FeedsClient {
         }
 
         if (_response.error.reason === "status-code") {
-            throw new errors.CloudflareApiError({
-                statusCode: _response.error.statusCode,
-                body: _response.error.body,
-                rawResponse: _response.rawResponse,
-            });
+            switch (_response.error.statusCode) {
+                case 503:
+                    throw new CloudflareApiErrors.ServiceUnavailableError(
+                        _response.error.body as unknown,
+                        _response.rawResponse,
+                    );
+                default:
+                    throw new errors.CloudflareApiError({
+                        statusCode: _response.error.statusCode,
+                        body: _response.error.body,
+                        rawResponse: _response.rawResponse,
+                    });
+            }
         }
 
         return handleNonStatusCodeError(
@@ -129,6 +143,11 @@ export class FeedsClient {
      *
      * @param {CloudflareApi.cloudforceOne.threatSignals.CreateFeedsRequest} request
      * @param {FeedsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link CloudflareApi.ForbiddenError}
+     * @throws {@link CloudflareApi.ServiceUnavailableError}
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.threatSignals.feeds.create({
@@ -180,11 +199,21 @@ export class FeedsClient {
         }
 
         if (_response.error.reason === "status-code") {
-            throw new errors.CloudflareApiError({
-                statusCode: _response.error.statusCode,
-                body: _response.error.body,
-                rawResponse: _response.rawResponse,
-            });
+            switch (_response.error.statusCode) {
+                case 403:
+                    throw new CloudflareApiErrors.ForbiddenError(_response.error.body as unknown, _response.rawResponse);
+                case 503:
+                    throw new CloudflareApiErrors.ServiceUnavailableError(
+                        _response.error.body as unknown,
+                        _response.rawResponse,
+                    );
+                default:
+                    throw new errors.CloudflareApiError({
+                        statusCode: _response.error.statusCode,
+                        body: _response.error.body,
+                        rawResponse: _response.rawResponse,
+                    });
+            }
         }
 
         return handleNonStatusCodeError(
@@ -200,6 +229,9 @@ export class FeedsClient {
      *
      * @param {CloudflareApi.cloudforceOne.threatSignals.PollFeedsRequest} request
      * @param {FeedsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.threatSignals.feeds.poll({
@@ -219,7 +251,13 @@ export class FeedsClient {
     ): Promise<core.WithRawResponse<CloudflareApi.cloudforceOne.threatSignals.PollFeedsResponse>> {
         const { account_id: accountId, feed_id: feedId } = request;
         const _queryParams: Record<string, unknown> = {
-            feed_id: feedId != null ? feedId : undefined,
+            feed_id: Array.isArray(feedId)
+                ? feedId.map((item) => (typeof item === "string" ? item : toJson(item)))
+                : feedId != null
+                  ? typeof feedId === "string"
+                      ? feedId
+                      : toJson(feedId)
+                  : undefined,
         };
         const _authRequest: core.AuthRequest = await this._options.authProvider.getAuthRequest();
         let _headers: core.Fetcher.Args["headers"] = mergeHeaders(
@@ -275,6 +313,9 @@ export class FeedsClient {
      *
      * @param {CloudflareApi.cloudforceOne.threatSignals.DeleteFeedsRequest} request
      * @param {FeedsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.threatSignals.feeds.delete({
@@ -344,6 +385,9 @@ export class FeedsClient {
      *
      * @param {CloudflareApi.cloudforceOne.threatSignals.UpdateFeedsRequest} request
      * @param {FeedsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.threatSignals.feeds.update({
@@ -416,6 +460,9 @@ export class FeedsClient {
      *
      * @param {CloudflareApi.cloudforceOne.threatSignals.GetRawFeedsRequest} request
      * @param {FeedsClient.RequestOptions} requestOptions - Request-specific configuration.
+     *
+     * @throws {@link errors.CloudflareApiError}
+     * @throws {@link errors.CloudflareApiTimeoutError}
      *
      * @example
      *     await client.cloudforceOne.threatSignals.feeds.getRaw({
